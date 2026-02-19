@@ -1,5 +1,5 @@
 {
-  "name": "@rnvibecode/dot",
+  "name": "@react-native-vibe-code/dot",
   "version": "0.0.1",
   "license": "MIT",
   "main": "src/index.ts",
