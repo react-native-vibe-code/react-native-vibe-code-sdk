@@ -1,0 +1,10 @@
+{
+  "extends": "@react-native-vibe-code/tsconfig/react-library.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "jsx": "react-native"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
