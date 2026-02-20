@@ -153,7 +153,7 @@ const program = new Command()
 program
   .name('create-rnvibecode')
   .description('Create a new React Native Vibe Code project')
-  .version('0.0.2')
+  .version('0.0.3')
   .argument('<project-name>', 'Name of the project to create')
   .option('--skip-install', 'Skip dependency installation')
   .action(async (projectName: string, options: { skipInstall?: boolean }) => {
