@@ -15,7 +15,7 @@
     "@react-native-vibe-code/auth": "workspace:*",
     "@react-native-vibe-code/chat": "workspace:*",
     "@react-native-vibe-code/prompt-engine": "workspace:*",
-    "@react-native-vibe-code/starter-kit": "workspace:*",
+    "create-rnvibecode": "workspace:*",
     "@react-native-vibe-code/code-editor": "workspace:*",
     "@react-native-vibe-code/config": "workspace:*",
     "@react-native-vibe-code/convex": "workspace:*",
