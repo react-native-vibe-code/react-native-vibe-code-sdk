@@ -596,24 +596,18 @@ function ProjectPageInternal() {
     fetchCloudStatus()
   }, [fetchCloudStatus])
 
-  const handleSetupAuth = useCallback(() => {
-    setDesktopSidebarPanel(null)
-    setMobileSidebarPanel(null)
-    append({
-      role: 'user',
-      content: `Please set up Convex authentication with email/password for my Expo React Native app. Follow these steps:
-
-1. Install the required packages: @convex-dev/auth and @auth/core
-2. Create convex/auth.ts with the Password provider from @convex-dev/auth/providers/Password
-3. Update convex/schema.ts to spread authTables from @convex-dev/auth/server inside defineSchema
-4. Create or update convex/http.ts to add authentication HTTP routes using auth.addHttpRoutes(http)
-5. Run npx @convex-dev/auth to generate JWT private key and JWKS, then configure SITE_URL as an environment variable
-6. Update the root app layout (_layout.tsx) to wrap with ConvexAuthProvider from @convex-dev/auth/react-native, using expo-secure-store as the storage option
-7. Create a sign-in screen and sign-up screen with email and password input fields using the useAuthActions hook
-
-Important: Use @convex-dev/auth/react-native (not /react) for Expo compatibility and expo-secure-store for secure token persistence.`,
+  const handleSetupAuth = useCallback(async (): Promise<void> => {
+    const response = await fetch('/api/setup-convex-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId }),
     })
-  }, [append, setDesktopSidebarPanel, setMobileSidebarPanel])
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to setup Convex Auth')
+    }
+  }, [projectId])
 
   // Legacy compatibility
   const isDesktopMode = viewMode === 'desktop'

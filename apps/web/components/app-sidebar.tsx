@@ -40,7 +40,7 @@ interface AppSidebarProps {
   cloudEnabled?: boolean
   cloudDeploymentUrl?: string
   onCloudEnabled?: () => void
-  onSetupAuth?: () => void
+  onSetupAuth?: () => Promise<void>
 }
 
 function SidebarToggle() {
@@ -421,7 +421,7 @@ export function AppSidebar({
               projectId={projectId}
               cloudEnabled={cloudEnabled || false}
               onNavigateToCloud={() => handlePanelChange('cloud')}
-              onSetupAuth={onSetupAuth || (() => {})}
+              onSetupAuth={onSetupAuth || (async () => {})}
               onClose={() => handlePanelChange(null)}
             />
           </PanelContent>
