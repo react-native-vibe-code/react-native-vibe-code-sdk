@@ -47,7 +47,8 @@
     "build:sandbox:expo": "e2b template build --config templates/expo-template/e2b.toml --name 'capsule-expo-sandbox'",
     "build:sandbox:tamagui": "e2b template build --config templates/tamagui-template/e2b.toml --name 'capsule-tamagui-sandbox'",
     "build:sandbox:github": "e2b template build --config templates/github-template/e2b.toml --name 'capsule-github-sandbox'",
-    "build:sandbox:daytona": "docker build -f templates/daytona-expo-template/Dockerfile -t react-native-vibe-code/expo-sandbox:latest ."
+    "build:sandbox:expo:daytona": "docker build -f templates/daytona-expo-template/Dockerfile -t react-native-vibe-code/expo-sandbox:latest .",
+    "build:sandbox:github:daytona": "docker build -f templates/daytona-github-template/Dockerfile -t react-native-vibe-code/github-sandbox:latest ."
   },
   "publishConfig": {
     "access": "public"
