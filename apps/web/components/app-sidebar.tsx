@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud } from "lucide-react"
+import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud, KeyRound } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import { AssetsPanel } from "@/components/assets-panel"
 import { ProjectsPanel } from "@/components/projects-panel"
 import { BackendPanel } from "@/components/backend-panel"
 import { CloudSidebarPanel } from "@/components/cloud-sidebar-panel"
+import { AuthSidebarPanel } from "@/components/auth-sidebar-panel"
 import { UserMenu } from "@/components/user-menu"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -39,6 +40,7 @@ interface AppSidebarProps {
   cloudEnabled?: boolean
   cloudDeploymentUrl?: string
   onCloudEnabled?: () => void
+  onSetupAuth?: () => void
 }
 
 function SidebarToggle() {
@@ -91,6 +93,12 @@ function SidebarNav({
       id: "cloud",
       label: "Cloud",
       icon: Cloud,
+      spacer: false,
+    },
+    {
+      id: "auth",
+      label: "Authentication",
+      icon: KeyRound,
       spacer: false,
     },
     {
@@ -182,7 +190,7 @@ function PanelContent({
   children,
   onClose,
 }: {
-  isBottomOption: boolean
+  isBottomOption?: boolean
   isOpen: boolean
   isFirstOpen: boolean
   isSwitching: boolean
@@ -296,6 +304,7 @@ export function AppSidebar({
   cloudEnabled,
   cloudDeploymentUrl,
   onCloudEnabled,
+  onSetupAuth,
 }: AppSidebarProps) {
   const [internalActivePanel, setInternalActivePanel] = useState<string | null>(null)
   const [isFirstOpen, setIsFirstOpen] = useState(true)
@@ -396,6 +405,23 @@ export function AppSidebar({
               cloudEnabled={cloudEnabled || false}
               deploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={onCloudEnabled}
+              onNavigateToAuth={() => handlePanelChange('auth')}
+              onClose={() => handlePanelChange(null)}
+            />
+          </PanelContent>
+
+          <PanelContent
+            isOpen={activePanel === "auth"}
+            isFirstOpen={isFirstOpen}
+            isSwitching={isSwitching}
+            onClose={() => handlePanelChange(null)}
+            isBottomOption
+          >
+            <AuthSidebarPanel
+              projectId={projectId}
+              cloudEnabled={cloudEnabled || false}
+              onNavigateToCloud={() => handlePanelChange('cloud')}
+              onSetupAuth={onSetupAuth || (() => {})}
               onClose={() => handlePanelChange(null)}
             />
           </PanelContent>

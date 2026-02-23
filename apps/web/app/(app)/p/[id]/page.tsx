@@ -18,6 +18,7 @@ import { AssetsPanel } from '@/components/assets-panel'
 import { ProjectsPanel } from '@/components/projects-panel'
 import { BackendPanel } from '@/components/backend-panel'
 import { CloudSidebarPanel } from '@/components/cloud-sidebar-panel'
+import { AuthSidebarPanel } from '@/components/auth-sidebar-panel'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 // ResizableHandle and ResizablePanel/Group removed - using fixed 500px width for chat panel
@@ -594,6 +595,25 @@ function ProjectPageInternal() {
   const handleCloudEnabled = useCallback(() => {
     fetchCloudStatus()
   }, [fetchCloudStatus])
+
+  const handleSetupAuth = useCallback(() => {
+    setDesktopSidebarPanel(null)
+    setMobileSidebarPanel(null)
+    append({
+      role: 'user',
+      content: `Please set up Convex authentication with email/password for my Expo React Native app. Follow these steps:
+
+1. Install the required packages: @convex-dev/auth and @auth/core
+2. Create convex/auth.ts with the Password provider from @convex-dev/auth/providers/Password
+3. Update convex/schema.ts to spread authTables from @convex-dev/auth/server inside defineSchema
+4. Create or update convex/http.ts to add authentication HTTP routes using auth.addHttpRoutes(http)
+5. Run npx @convex-dev/auth to generate JWT private key and JWKS, then configure SITE_URL as an environment variable
+6. Update the root app layout (_layout.tsx) to wrap with ConvexAuthProvider from @convex-dev/auth/react-native, using expo-secure-store as the storage option
+7. Create a sign-in screen and sign-up screen with email and password input fields using the useAuthActions hook
+
+Important: Use @convex-dev/auth/react-native (not /react) for Expo compatibility and expo-secure-store for secure token persistence.`,
+    })
+  }, [append, setDesktopSidebarPanel, setMobileSidebarPanel])
 
   // Legacy compatibility
   const isDesktopMode = viewMode === 'desktop'
@@ -2428,6 +2448,7 @@ function ProjectPageInternal() {
               cloudEnabled={cloudEnabled}
               cloudDeploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={handleCloudEnabled}
+              onSetupAuth={handleSetupAuth}
             >
             <div className="flex h-full w-full">
           {/* Fixed width Chat/History panel - 500px */}
@@ -2610,6 +2631,22 @@ function ProjectPageInternal() {
               cloudEnabled={cloudEnabled}
               deploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={handleCloudEnabled}
+              onNavigateToAuth={() => setMobileSidebarPanel('auth')}
+              onClose={() => setMobileSidebarPanel(null)}
+            />
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={mobileSidebarPanel === 'auth'} onOpenChange={(open) => !open && setMobileSidebarPanel(null)}>
+          <SheetContent side="left" className="w-full sm:max-w-[400px] p-0">
+            <VisuallyHidden.Root>
+              <SheetTitle>Authentication</SheetTitle>
+            </VisuallyHidden.Root>
+            <AuthSidebarPanel
+              projectId={projectId}
+              cloudEnabled={cloudEnabled}
+              onNavigateToCloud={() => setMobileSidebarPanel('cloud')}
+              onSetupAuth={handleSetupAuth}
               onClose={() => setMobileSidebarPanel(null)}
             />
           </SheetContent>
