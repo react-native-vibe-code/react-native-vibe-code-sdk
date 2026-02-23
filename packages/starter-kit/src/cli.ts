@@ -4,8 +4,11 @@ import ora from 'ora'
 import fs from 'fs-extra'
 import path from 'path'
 import { execSync } from 'child_process'
+import { select } from '@inquirer/select'
 
 const TEMPLATE_REPO = 'react-native-vibe-code/react-native-vibe-code-sdk/packages/sandbox/local-expo-app'
+
+type AgentFileChoice = 'claude' | 'agents' | 'gemini' | 'all' | 'none'
 
 function validateProjectName(name: string): boolean {
   return /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(name)
@@ -31,7 +34,7 @@ function installCommand(pm: string): string {
   return pm === 'yarn' ? 'yarn' : `${pm} install`
 }
 
-function generateClaudeMd(projectName: string): string {
+function generateAgentContent(projectName: string): string {
   return `# ${projectName}
 
 You are a mobile app builder. You build beautiful React Native apps that work on native mobile and on the web using Expo, React Native APIs, and mobile UX/UI best practices.
@@ -426,13 +429,80 @@ if (Platform.OS !== 'web') {
 `
 }
 
-async function setupClaudeCode(targetDir: string, projectName: string) {
-  const claudeDir = path.join(targetDir, '.claude')
-  await fs.ensureDir(claudeDir)
-  await fs.writeFile(path.join(targetDir, 'CLAUDE.md'), generateClaudeMd(projectName))
+const AGENT_FILE_DESCRIPTIONS: Record<AgentFileChoice, string> = {
+  claude: 'CLAUDE.md created for Anthropic Claude / Claude Code',
+  agents: 'AGENTS.md created (cross-provider standard)',
+  gemini: 'GEMINI.md created for Google Gemini',
+  all: 'CLAUDE.md, AGENTS.md, and GEMINI.md created',
+  none: 'No agent instruction file created',
 }
 
-async function createProject(projectName: string, options: { skipInstall?: boolean }) {
+async function promptAgentFileSelection(): Promise<AgentFileChoice> {
+  return select<AgentFileChoice>({
+    message: 'Which AI agent instruction file would you like to create?',
+    choices: [
+      {
+        name: 'CLAUDE.md  — Anthropic Claude / Claude Code',
+        value: 'claude',
+        description: 'Recommended for projects using Claude Code or the Anthropic Claude CLI',
+      },
+      {
+        name: 'AGENTS.md  — Cross-provider standard',
+        value: 'agents',
+        description: 'Backed by OpenAI, Google, and others. Works across Claude, Codex, Gemini, and more',
+      },
+      {
+        name: 'GEMINI.md  — Google Gemini',
+        value: 'gemini',
+        description: 'For projects using Google Gemini CLI or Gemini Code Assist',
+      },
+      {
+        name: 'All files  — CLAUDE.md + AGENTS.md + GEMINI.md',
+        value: 'all',
+        description: 'Maximum compatibility across all major AI coding tools',
+      },
+      {
+        name: 'Skip  — No agent instruction file',
+        value: 'none',
+        description: 'Skip creating any agent instruction files',
+      },
+    ],
+  })
+}
+
+function resolveAgentChoice(raw: string): AgentFileChoice | null {
+  const valid: AgentFileChoice[] = ['claude', 'agents', 'gemini', 'all', 'none']
+  return valid.includes(raw as AgentFileChoice) ? (raw as AgentFileChoice) : null
+}
+
+async function setupAgentFiles(
+  targetDir: string,
+  projectName: string,
+  choice: AgentFileChoice,
+): Promise<void> {
+  if (choice === 'none') return
+
+  const content = generateAgentContent(projectName)
+
+  if (choice === 'claude' || choice === 'all') {
+    const claudeDir = path.join(targetDir, '.claude')
+    await fs.ensureDir(claudeDir)
+    await fs.writeFile(path.join(targetDir, 'CLAUDE.md'), content)
+  }
+
+  if (choice === 'agents' || choice === 'all') {
+    await fs.writeFile(path.join(targetDir, 'AGENTS.md'), content)
+  }
+
+  if (choice === 'gemini' || choice === 'all') {
+    await fs.writeFile(path.join(targetDir, 'GEMINI.md'), content)
+  }
+}
+
+async function createProject(
+  projectName: string,
+  options: { skipInstall?: boolean; agent?: string },
+) {
   const targetDir = path.resolve(process.cwd(), projectName)
 
   if (fs.existsSync(targetDir)) {
@@ -444,11 +514,33 @@ async function createProject(projectName: string, options: { skipInstall?: boole
   console.log(chalk.bold(`Creating a new React Native Vibe Code project in ${chalk.cyan(projectName)}`))
   console.log()
 
+  let agentChoice: AgentFileChoice
+
+  if (options.agent !== undefined) {
+    const resolved = resolveAgentChoice(options.agent)
+    if (!resolved) {
+      console.error(
+        chalk.red(
+          `Invalid --agent value "${options.agent}". Must be one of: claude, agents, gemini, all, none`,
+        ),
+      )
+      process.exit(1)
+    }
+    agentChoice = resolved
+  } else {
+    try {
+      agentChoice = await promptAgentFileSelection()
+    } catch {
+      agentChoice = 'claude'
+    }
+  }
+
+  console.log()
+
   // Download template
   const spinner = ora('Downloading template...').start()
 
   try {
-    // degit is ESM-only, dynamic import
     const degit = (await import('degit')).default
     const emitter = degit(TEMPLATE_REPO, {
       cache: false,
@@ -490,13 +582,15 @@ async function createProject(projectName: string, options: { skipInstall?: boole
     await fs.writeJson(appJsonPath, appJson, { spaces: 2 })
   }
 
-  // Set up Claude Code
-  const claudeSpinner = ora('Setting up Claude Code...').start()
-  try {
-    await setupClaudeCode(targetDir, projectName)
-    claudeSpinner.succeed('Claude Code configured')
-  } catch {
-    claudeSpinner.warn('Could not set up Claude Code configuration')
+  // Set up agent instruction file(s)
+  if (agentChoice !== 'none') {
+    const agentSpinner = ora('Setting up agent instruction file...').start()
+    try {
+      await setupAgentFiles(targetDir, projectName, agentChoice)
+      agentSpinner.succeed(AGENT_FILE_DESCRIPTIONS[agentChoice])
+    } catch {
+      agentSpinner.warn('Could not set up agent instruction file')
+    }
   }
 
   // Install dependencies
@@ -527,7 +621,9 @@ async function createProject(projectName: string, options: { skipInstall?: boole
   }
   console.log(chalk.cyan('  npx expo start'))
   console.log()
-  console.log(chalk.dim('Claude Code is pre-configured via CLAUDE.md'))
+  if (agentChoice !== 'none') {
+    console.log(chalk.dim(AGENT_FILE_DESCRIPTIONS[agentChoice]))
+  }
   console.log()
 
   process.exit(0)
@@ -541,7 +637,11 @@ program
   .version('0.0.1')
   .argument('<project-name>', 'Name of the project to create')
   .option('--skip-install', 'Skip dependency installation')
-  .action(async (projectName: string, options: { skipInstall?: boolean }) => {
+  .option(
+    '--agent <choice>',
+    'Agent instruction file to create: claude, agents, gemini, all, none (skips interactive prompt)',
+  )
+  .action(async (projectName: string, options: { skipInstall?: boolean; agent?: string }) => {
     if (!validateProjectName(projectName)) {
       console.error(
         chalk.red(
@@ -561,13 +661,23 @@ program
 
 program.addHelpText('after', `
 ${chalk.bold('Examples:')}
-  ${chalk.cyan('npx create-rnvibecode my-app')}          Create a new project
-  ${chalk.cyan('npx create-rnvibecode my-app --skip-install')}   Create without installing deps
+  ${chalk.cyan('npx create-rnvibecode my-app')}                         Create a new project (interactive)
+  ${chalk.cyan('npx create-rnvibecode my-app --agent claude')}          Create with CLAUDE.md
+  ${chalk.cyan('npx create-rnvibecode my-app --agent agents')}          Create with AGENTS.md
+  ${chalk.cyan('npx create-rnvibecode my-app --agent all')}             Create all agent files
+  ${chalk.cyan('npx create-rnvibecode my-app --agent none')}            Skip agent file creation
+  ${chalk.cyan('npx create-rnvibecode my-app --skip-install')}          Create without installing deps
+
+${chalk.bold('Agent file options:')}
+  ${chalk.cyan('claude')}   CLAUDE.md — Anthropic Claude / Claude Code
+  ${chalk.cyan('agents')}   AGENTS.md — Cross-provider standard (OpenAI, Google, Anthropic)
+  ${chalk.cyan('gemini')}   GEMINI.md — Google Gemini CLI / Gemini Code Assist
+  ${chalk.cyan('all')}      All three files for maximum compatibility
+  ${chalk.cyan('none')}     No agent instruction file
 
 ${chalk.bold('What you get:')}
   Expo SDK 54 starter with 67+ packages pre-configured for
   AI-powered mobile app development with React Native.
-  Includes CLAUDE.md for Claude Code integration.
 
 ${chalk.bold('Learn more:')}
   ${chalk.blue('https://github.com/react-native-vibe-code/react-native-vibe-code-sdk')}
