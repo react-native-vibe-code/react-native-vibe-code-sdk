@@ -11,7 +11,7 @@
  * @see README.md for required environment variables
  */
 
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import { customAlphabet } from 'nanoid'
 import { addCustomDomain, verifyCustomDomain } from './custom-domain'
 import type { CloudflareDeployOptions, CloudflareDeployResult } from '../types'
@@ -99,8 +99,8 @@ export async function deployToCloudflare(
     console.log(`[Cloudflare Deploy] Sandbox ID received: ${sandboxId}`)
     console.log(`[Cloudflare Deploy] About to connect to sandbox...`)
 
-    // Connect to the sandbox
-    const sandbox = await Sandbox.connect(sandboxId)
+    // Connect to the sandbox using the active provider
+    const sandbox = await getSandboxProvider().connect(sandboxId)
     console.log(`[Cloudflare Deploy] Successfully connected to sandbox: ${sandbox.sandboxId}`)
 
     // Step 1: Build the web app

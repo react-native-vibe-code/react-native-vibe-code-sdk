@@ -1,6 +1,5 @@
 import { db, projects, message, eq, and, gte } from '@react-native-vibe-code/database'
-import { startExpoServer } from '@react-native-vibe-code/sandbox'
-import { Sandbox } from '@e2b/code-interpreter'
+import { startExpoServer, getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import type { GitRestoreRequest, GitRestoreResponse } from '../types'
 
 export const maxDuration = 120 // 2 minutes for git operations + server restart
@@ -141,10 +140,10 @@ export async function restoreGitCommit(
 
   const project = existingProjects[0]
 
-  // Connect to sandbox
-  let sandbox: Sandbox
+  // Connect to sandbox using the active provider
+  let sandbox: Awaited<ReturnType<typeof getSandboxProvider>['connect']>
   try {
-    sandbox = await Sandbox.connect(sandboxId)
+    sandbox = await getSandboxProvider().connect(sandboxId)
     console.log(`[Git Restore] Connected to sandbox: ${sandbox.sandboxId}`)
   } catch (error) {
     console.error(

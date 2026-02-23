@@ -1,9 +1,23 @@
 /**
  * Convex Sandbox Utilities
- * Functions for managing Convex configuration in E2B sandboxes
+ * Functions for managing Convex configuration in sandboxes.
+ * Compatible with any sandbox provider (E2B, Daytona, etc.)
  */
 
-import type { Sandbox } from '@e2b/code-interpreter'
+/**
+ * Minimal sandbox interface required by Convex sandbox utilities.
+ * This avoids a circular dependency with @react-native-vibe-code/sandbox.
+ */
+interface SandboxLike {
+  files: {
+    exists(path: string): Promise<boolean>
+    read(path: string): Promise<string>
+    write(path: string, content: string): Promise<void>
+  }
+}
+
+/** @deprecated Use SandboxLike directly. Kept for backwards compatibility. */
+type Sandbox = SandboxLike
 import { db, convexProjectCredentials, eq } from '@react-native-vibe-code/database'
 import { detectAndNotifyConvexError } from '@react-native-vibe-code/error-manager/server'
 

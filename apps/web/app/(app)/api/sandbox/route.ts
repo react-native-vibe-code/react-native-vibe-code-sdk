@@ -2,12 +2,12 @@ import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider, type ISandbox } from '@react-native-vibe-code/sandbox/lib'
 import { eq, and } from 'drizzle-orm'
 import { globalFileWatcher } from '@/lib/sandbox-file-watcher'
 import { globalFileChangeStream } from '@/lib/file-change-stream'
 
-const sandboxTimeout = parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000') // Use env var, default to 1 hour
+const sandboxTimeout = parseInt(process.env.SANDBOX_TIMEOUT_MS || process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000') // Use env var, default to 1 hour
 
 export const maxDuration = 120
 
@@ -122,7 +122,9 @@ export async function POST(req: Request) {
   }
 
   let project = null
-  let sbx = null
+  let sbx: ISandbox | null = null
+
+  const sandboxProvider = getSandboxProvider()
 
   // Check if this is a follow-up message for an existing project
   if (projectId && !isFirstMessage) {
@@ -148,21 +150,14 @@ export async function POST(req: Request) {
         // Try to connect to the existing sandbox
         if (project.sandboxId) {
           try {
-            sbx = await Sandbox.connect(project.sandboxId)
+            sbx = await sandboxProvider.connect(project.sandboxId)
             console.log(`Connected to sandbox: ${sbx.sandboxId}`)
-          } catch (error) {
-            console.log(`Failed to connect to sandbox ${project.sandboxId}:`, error)
-            // Try to connect to existing sandbox instead
-            try {
-              sbx = await Sandbox.connect(project.sandboxId)
-              console.log(`Connected to existing sandbox: ${sbx.sandboxId}`)
-            } catch (connectError) {
-              console.log(
-                `Failed to connect to sandbox ${project.sandboxId}:`,
-                connectError,
-              )
-              // If both resume and connect fail, we'll create a new sandbox below
-            }
+          } catch (connectError) {
+            console.log(
+              `Failed to connect to sandbox ${project.sandboxId}:`,
+              connectError,
+            )
+            // If connect fails, we'll create a new sandbox below
           }
         }
       }
@@ -178,7 +173,9 @@ export async function POST(req: Request) {
         ? 'sm3r39vktkmu37lna0qa'
         : fragment.template
 
-    sbx = await Sandbox.create(templateId, {
+    sbx = await sandboxProvider.create({
+      templateId,
+      image: process.env.DAYTONA_IMAGE,
       metadata: {
         template: templateId,
         userID: userID ?? '',
@@ -310,18 +307,26 @@ export async function POST(req: Request) {
       console.log(`Still waiting for webBundled... ${waitTime}ms elapsed`)
     }
 
-    // Get the public URL using e2b's getHost method
-    const publicHost = sbx.getHost(8081)
-    publicUrl = `https://${publicHost}`
+    // Get the public URL - try async getPreviewUrl first, fall back to sync getHost
+    if (sbx.getPreviewUrl) {
+      publicUrl = await sbx.getPreviewUrl(8081)
+    } else {
+      publicUrl = `https://${sbx.getHost(8081)}`
+    }
 
-    console.log('E2B public URL:', publicUrl)
+    console.log('Sandbox public URL:', publicUrl)
 
     if (!webBundled) {
       console.warn('WebBundled not detected, but proceeding with URL')
     }
   } else {
     // For other templates, use the standard port
-    publicUrl = `https://${sbx?.getHost(fragment.port || 80)}`
+    const port = fragment.port || 80
+    if (sbx?.getPreviewUrl) {
+      publicUrl = await sbx.getPreviewUrl(port)
+    } else {
+      publicUrl = `https://${sbx?.getHost(port)}`
+    }
   }
 
   // Install packages

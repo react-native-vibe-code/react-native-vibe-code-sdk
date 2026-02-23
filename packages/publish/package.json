@@ -35,6 +35,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@react-native-vibe-code/sandbox": "workspace:*",
     "@e2b/code-interpreter": "2.1.0",
     "cloudflare": "^5.2.0",
     "nanoid": "^5.1.5"

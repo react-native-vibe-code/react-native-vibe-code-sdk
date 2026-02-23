@@ -1,5 +1,24 @@
 // Sandbox library exports
 
+// Provider abstraction layer
+export {
+  getSandboxProvider,
+  resetSandboxProvider,
+  E2BProvider,
+  DaytonaProvider,
+  type ISandbox,
+  type ISandboxFiles,
+  type ISandboxCommands,
+  type ISandboxProvider,
+  type SandboxCreateConfig,
+  type CommandResult,
+  type CommandOptions,
+  type FileWatchEvent,
+  type WatchHandle,
+  type WatchOptions,
+  type SandboxProviderName,
+} from './providers'
+
 // File watcher
 export {
   SandboxFileWatcher,

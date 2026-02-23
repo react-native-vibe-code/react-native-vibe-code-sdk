@@ -1,5 +1,3 @@
-import type { Sandbox } from '@e2b/code-interpreter'
-
 // Commit types
 export interface Commit {
   hash: string

@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { startExpoServer } from '@/lib/server-utils'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 
@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
         // Verify the sandbox is still active before returning cached URLs
         try {
           console.log('Verifying sandbox is still active:', sandboxId)
-          const testSandbox = await Sandbox.connect(sandboxId)
-          await testSandbox.close() // Close immediately after verification
+          const testSandbox = await getSandboxProvider().connect(sandboxId)
+          if (testSandbox.close) await testSandbox.close() // Close immediately after verification
 
           console.log(
             'Server already running and sandbox active, returning existing URLs:',
@@ -95,10 +95,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Connect to sandbox
-    let sandbox: Sandbox
+    // Connect to sandbox using the active provider
+    let sandbox: Awaited<ReturnType<typeof getSandboxProvider>['connect']>
     try {
-      sandbox = await Sandbox.connect(sandboxId)
+      sandbox = await getSandboxProvider().connect(sandboxId)
       console.log(`Connected to sandbox for server start: ${sandbox.sandboxId}`)
     } catch (error) {
       console.error(`Failed to resume sandbox ${sandboxId}:`, error)

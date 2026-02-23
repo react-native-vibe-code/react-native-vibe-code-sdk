@@ -1,9 +1,10 @@
 /**
  * Static Bundle Builder Service
- * Builds Expo static bundles in E2B sandboxes and uploads to Vercel Blob
+ * Builds Expo static bundles in sandboxes and uploads to Vercel Blob.
+ * Compatible with any ISandbox provider (E2B, Daytona, etc.)
  */
 
-import { Sandbox } from '@e2b/code-interpreter'
+import type { ISandbox } from './providers/types'
 import { put } from '@vercel/blob'
 import { generateManifest, validateManifest } from './generate-manifest'
 import { db, projects, commits, eq } from '@react-native-vibe-code/database'
@@ -30,7 +31,7 @@ export async function buildStaticBundle(
   commitId: string,
   userMessage?: string
 ): Promise<BundleBuildResult> {
-  let sandbox: Sandbox | null = null
+  let sandbox: ISandbox | null = null
 
   try {
     console.log('[BundleBuilder] Starting bundle build', {
@@ -39,8 +40,9 @@ export async function buildStaticBundle(
       commitId,
     })
 
-    // Connect to existing sandbox
-    sandbox = await Sandbox.connect(sandboxId)
+    // Connect to existing sandbox using the active provider
+    const { getSandboxProvider } = await import('./providers')
+    sandbox = await getSandboxProvider().connect(sandboxId)
 
     // Step 1: Run expo export for iOS
     console.log('[BundleBuilder] Running expo export...')
@@ -270,7 +272,7 @@ function getContentTypeForExtension(extension: string): string {
 /**
  * Get latest commit SHA from sandbox
  */
-export async function getLatestCommitSHA(sandbox: Sandbox): Promise<string> {
+export async function getLatestCommitSHA(sandbox: ISandbox): Promise<string> {
   try {
     const result = await sandbox.commands.run(
       'cd /home/user/app && git rev-parse HEAD'

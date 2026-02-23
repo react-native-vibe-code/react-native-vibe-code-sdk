@@ -2,7 +2,7 @@ import { ClaudeCodeService } from '@/lib/claude-code-service'
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { UsageTracker } from '@/lib/usage-tracking'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider, type ISandbox } from '@react-native-vibe-code/sandbox/lib'
 import { eq, and } from 'drizzle-orm'
 import { getSkillTemplate, getSkillFilePath } from '@/lib/skills/templates'
 import { validateSkillIds } from '@/lib/skills'
@@ -62,7 +62,7 @@ export async function handleClaudeCodeGeneration(
 
   // Get existing project
   let project: any = null
-  let sandbox: Sandbox | null = null
+  let sandbox: ISandbox | null = null
 
   // Helper function to fetch project from database
   const fetchProject = async () => {
@@ -133,8 +133,8 @@ export async function handleClaudeCodeGeneration(
       }
     }
 
-    // Connect to sandbox
-    sandbox = await Sandbox.connect(targetSandboxId)
+    // Connect to sandbox using the active provider
+    sandbox = await getSandboxProvider().connect(targetSandboxId)
     console.log(`[Claude Code Handler] Connected to sandbox: ${sandbox.sandboxId}`)
   } catch (error) {
     console.error('[Claude Code Handler] Error checking for existing project:', error)

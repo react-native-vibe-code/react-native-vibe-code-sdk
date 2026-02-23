@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 
 export async function POST(request: Request) {
   try {
@@ -11,14 +11,15 @@ export async function POST(request: Request) {
 
     console.log('[check-sandbox] Checking sandbox container:', sandboxId)
 
-    // Check if the sandbox container is alive using E2B SDK
+    // Check if the sandbox container is alive using the active provider
     try {
-      const sandbox = await Sandbox.connect(sandboxId)
-
+      const sandbox = await getSandboxProvider().connect(sandboxId)
       console.log('[check-sandbox] Sandbox container is alive:', sandboxId)
 
-      // Note: E2B Sandbox doesn't need explicit closing for resume operations
-      // The sandbox will remain active and timeout according to E2B's policies
+      // Close connection if supported
+      if (sandbox.close) {
+        await sandbox.close().catch(() => {})
+      }
 
       return NextResponse.json({ isAlive: true })
     } catch (error) {

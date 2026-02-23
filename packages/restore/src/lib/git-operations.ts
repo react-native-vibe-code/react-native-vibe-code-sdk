@@ -1,4 +1,4 @@
-import type { Sandbox } from '@e2b/code-interpreter'
+import type { ISandbox as Sandbox } from '@react-native-vibe-code/sandbox/lib'
 
 /**
  * Execute git status in sandbox
