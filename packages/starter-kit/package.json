@@ -19,6 +19,7 @@
     "name": "create-rnvibecode"
   },
   "dependencies": {
+    "@inquirer/select": "^4.0.2",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "degit": "^2.8.4",
