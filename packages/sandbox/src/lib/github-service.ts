@@ -93,9 +93,21 @@ set -e
 
 cd /home/user/app
 
+# Initialize git repo if it doesn't exist (e.g. fresh sandbox)
+if [ ! -d ".git" ]; then
+  echo "Initializing git repository..."
+  git init
+fi
+
 # Configure git user (in case it's not set)
 git config user.name "E2B Sandbox"
 git config user.email "sandbox@e2b.dev"
+
+# Ensure remote origin always points to the correct repository.
+# This is critical for remixed projects where the origin may have
+# been inherited from the source project or may have a stale token.
+git remote set-url origin https://${this.config.token}@github.com/${this.config.owner}/${repositoryName}.git 2>/dev/null || \
+  git remote add origin https://${this.config.token}@github.com/${this.config.owner}/${repositoryName}.git
 
 # Add specified files or all files
 git add ${filesToAdd}
@@ -111,8 +123,10 @@ git commit -m "${commitMessage}"
 
 # Push to GitHub
 echo "Pushing changes to GitHub..."
-# Always push to main branch
-git push origin main
+# Push current HEAD to remote main branch regardless of local branch name.
+# Using HEAD:main handles cases where the local branch is named "master"
+# (older git defaults) while the remote expects "main".
+git push origin HEAD:main
 
 echo "Successfully pushed changes to GitHub"
 `

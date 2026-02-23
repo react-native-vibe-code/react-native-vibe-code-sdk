@@ -500,7 +500,13 @@ if [ "$FILE_COUNT" -lt 1 ]; then
 fi
 
 cd app
-git init || true
+
+# Remove the source project's git history so the remixed project
+# starts with a clean repository. Without this, the source .git
+# directory (included in the tarball) keeps the wrong remote URL,
+# causing subsequent git commits to target the source project's repo.
+rm -rf .git
+git init
 echo "SUCCESS: Files copied successfully"
 `
         const result = await sandbox.commands.run(extractScript, {
