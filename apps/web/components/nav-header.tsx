@@ -1244,21 +1244,16 @@ export function NavHeader({
             </Link>
           </Button>
 
-          {/* GitHub Icon */}
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => window.open('https://github.com/react-native-vibe-code/react-native-vibe-code-sdk', '_blank')}
-                >
-                  <GitHubLogoIcon className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>GitHub</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {/* GitHub Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.open('https://github.com/react-native-vibe-code/react-native-vibe-code-sdk', '_blank')}
+            className="flex items-center gap-2"
+          >
+            <GitHubLogoIcon className="h-5 w-5" />
+            <span className="hidden md:inline text-sm">GitHub</span>
+          </Button>
 
           {session && (
             <Sheet onOpenChange={(open) => open && handleProjectsSheetOpen()}>
