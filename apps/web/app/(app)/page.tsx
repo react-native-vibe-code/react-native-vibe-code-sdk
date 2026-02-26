@@ -10,7 +10,7 @@ export default async function Home() {
       <div className="md:h-dvh flex">
         <HomeClient initialSession={session} />
       </div>
-      <LandingFeaturesToggle />
+      {!session && <LandingFeaturesToggle />}
     </main>
   )
 }
