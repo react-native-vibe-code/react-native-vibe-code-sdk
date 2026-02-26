@@ -1,6 +1,6 @@
 {
   "name": "create-rnvibecode",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "description": "CLI to scaffold React Native Vibe Code projects from the starter template",
   "bin": {
