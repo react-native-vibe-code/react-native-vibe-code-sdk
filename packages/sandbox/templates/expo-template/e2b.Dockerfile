@@ -101,7 +101,7 @@ RUN bun init -y
 
 # Install dependencies for claude-sdk
 # Migrated to claude-agent-sdk (formerly claude-code)
-RUN bun install @anthropic-ai/claude-agent-sdk tsx execa
+RUN bun install @anthropic-ai/claude-agent-sdk execa
 
 # Install EAS CLI globally
 # RUN bun install --global eas-cli
@@ -127,8 +127,8 @@ RUN bun install --dev @types/node@^24.0.3
 # Switch back to root for file operations
 USER root
 
-# Copy the claude execution script (with image attachment support)
-COPY templates/expo-template/claude-executor.ts index.ts
+# Copy the pre-built standalone executor bundle
+COPY templates/shared/executor.mjs executor.mjs
 
 # Copy the structure script
 COPY templates/expo-template/get-structure.js get-structure.js
@@ -137,7 +137,7 @@ COPY templates/expo-template/get-structure.js get-structure.js
 COPY templates/expo-template/edit-file.js edit-file.js
 
 # Add start script to package.json
-RUN node -e "const pkg = require('./package.json'); pkg.scripts = pkg.scripts || {}; pkg.scripts.start = 'tsx index.ts'; pkg.scripts['get-structure'] = 'node get-structure.js'; pkg.scripts['edit-file'] = 'node edit-file.js'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
+RUN node -e "const pkg = require('./package.json'); pkg.scripts = pkg.scripts || {}; pkg.scripts.start = 'node executor.mjs'; pkg.scripts['get-structure'] = 'node get-structure.js'; pkg.scripts['edit-file'] = 'node edit-file.js'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
 
 # Note: ANTHROPIC_API_KEY should be set at runtime via environment variables
 # Do not hardcode API keys in the Docker image for security reasons

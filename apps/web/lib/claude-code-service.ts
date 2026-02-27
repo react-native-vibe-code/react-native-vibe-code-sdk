@@ -104,12 +104,8 @@ export class ClaudeCodeService {
       const sdkErrors: string[] = [] // Collect SDK errors, only send after completion
       let capturedSessionId: string | null = null
 
-      // Add line buffering to handle partial stdout chunks
+      // Line buffering to handle partial stdout chunks
       let lineBuffer = ''
-
-      // Add JSON buffering to handle multi-chunk JSON messages
-      let jsonBuffer = ''
-      let insideJsonMessage = false
 
       // Track execution context for debugging
       const executionStartTime = Date.now()
@@ -289,7 +285,7 @@ export class ClaudeCodeService {
               }
             }
 
-            // Parse and stream individual messages
+            // Parse and stream individual messages (slim format — each JSON fits on one line)
             try {
               // Split by newlines and process complete lines only
               const lines = lineBuffer.split('\n')
@@ -308,7 +304,6 @@ export class ClaudeCodeService {
                 }
 
                 // Capture session ID from init message
-                // Format: {"type":"system","subtype":"init",...,"session_id":"xyz",...}
                 if (line.includes('"type":"system"') && line.includes('"session_id"')) {
                   try {
                     const jsonMatch = line.match(/Streaming:\s*(\{.+\})/)
@@ -324,74 +319,39 @@ export class ClaudeCodeService {
                   }
                 }
 
+                // Also capture session_id from result messages
+                if (line.includes('"type":"result"') && line.includes('"session_id"')) {
+                  try {
+                    const jsonMatch = line.match(/Streaming:\s*(\{.+\})/)
+                    if (jsonMatch) {
+                      const parsed = JSON.parse(jsonMatch[1])
+                      if (parsed.session_id && !capturedSessionId) {
+                        capturedSessionId = parsed.session_id
+                        console.log('[Claude Code Service] Captured session ID from result:', capturedSessionId)
+                      }
+                    }
+                  } catch (e) {
+                    // ignore
+                  }
+                }
+
                 if (trimmedLine && line.includes('Streaming:')) {
-                  // Extract the message part after "Streaming:"
                   const messageMatch = line.match(/Streaming:\s*(.+)/)
                   if (messageMatch && messageMatch[1]) {
                     const messageContent = messageMatch[1].trim()
 
-                    // Skip heartbeat messages - they're just for keeping connection alive
+                    // Skip heartbeat messages
                     if (messageContent.includes('[Heartbeat')) {
                       continue
                     }
 
-                    console.log('[Claude Code Service] Streaming message:', messageContent.substring(0, 200))
-
-                    // Detect if this looks like it could be JSON
-                    const looksLikeJson = messageContent.startsWith('{') || messageContent.startsWith('[')
-
-                    if (looksLikeJson) {
-                      // Check if we're starting a new JSON message
-                      if (messageContent.startsWith('{') && !insideJsonMessage) {
-                        insideJsonMessage = true
-                        jsonBuffer = messageContent
-                      } else if (insideJsonMessage) {
-                        // Continue accumulating JSON
-                        jsonBuffer += messageContent
-                      }
-
-                      // Try to parse accumulated JSON
-                      try {
-                        const parsed = JSON.parse(jsonBuffer)
-
-                        // Successfully parsed - send it
-                        if (parsed && typeof parsed === 'object' && parsed.type) {
-                          callbacks.onMessage(jsonBuffer)
-                        } else {
-                          callbacks.onMessage(jsonBuffer)
-                        }
-
-                        // Reset JSON buffer
-                        jsonBuffer = ''
-                        insideJsonMessage = false
-                      } catch (jsonError) {
-                        // JSON is incomplete - check if it looks complete but invalid
-                        const openBraces = (jsonBuffer.match(/\{/g) || []).length
-                        const closeBraces = (jsonBuffer.match(/\}/g) || []).length
-                        const openBrackets = (jsonBuffer.match(/\[/g) || []).length
-                        const closeBrackets = (jsonBuffer.match(/\]/g) || []).length
-
-                        if (openBraces === closeBraces && openBrackets === closeBrackets && jsonBuffer.length > 0) {
-                          // Looks complete but invalid JSON - log error and send as plain text
-                          console.error('[Claude Code Service] Invalid JSON detected:', {
-                            buffer: jsonBuffer.substring(0, 200),
-                            error: jsonError instanceof Error ? jsonError.message : 'Parse error',
-                          })
-                          callbacks.onMessage(jsonBuffer)
-                          jsonBuffer = ''
-                          insideJsonMessage = false
-                        }
-                        // Otherwise, continue accumulating
-                      }
-                    } else {
-                      // Not JSON - send as plain text immediately
-                      callbacks.onMessage(messageContent)
-                    }
+                    // Slim messages are always small and complete — send directly
+                    callbacks.onMessage(messageContent)
                   }
                 } else if (
                   trimmedLine &&
-                  !line.includes('Received message:') && // Skip duplicate "Received message:" lines
-                  !line.includes('Streaming:') && // Skip lines we already processed
+                  !line.includes('Received message:') &&
+                  !line.includes('Streaming:') &&
                   !line.includes('Environment check:') &&
                   !line.includes('Working directory:') &&
                   !line.includes('Raw process.argv:') &&
@@ -407,17 +367,13 @@ export class ClaudeCodeService {
                   !line.includes('Query completed successfully') &&
                   !line.includes('CLAUDE_CODE_COMPLETE')
                 ) {
-                  // Send other meaningful stdout content, but filter out debug logs
                   callbacks.onMessage(trimmedLine)
                 }
               }
             } catch (error) {
               console.error('[Claude Code Service] Error parsing stdout for streaming:', error)
-              // On catastrophic error, send raw data and reset buffers
               callbacks.onMessage(data)
               lineBuffer = ''
-              jsonBuffer = ''
-              insideJsonMessage = false
             }
             },
             onStderr: (data: string) => {

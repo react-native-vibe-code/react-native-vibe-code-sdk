@@ -40,7 +40,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && pnpm build:standalone",
+    "build:standalone": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=es2022 --outfile=dist/standalone.mjs --external:@anthropic-ai/claude-agent-sdk --banner:js='#!/usr/bin/env node'",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit"
   },
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@react-native-vibe-code/tsconfig": "workspace:*",
     "@types/node": "^22.2.0",
+    "esbuild": "^0.24.0",
     "tsup": "^8.5.1",
     "typescript": "^5.5.4"
   }

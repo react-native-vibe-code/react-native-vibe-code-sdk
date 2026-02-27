@@ -3,6 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { downloadImage } from './utils/download-image.js'
 import { loadEnvFile } from './utils/env-loader.js'
+import { slimifyMessage } from './slim-message.js'
 import type { ExecutorArgs, ExecutorConfig, ExecutorHooks, ExecutorResult } from './types.js'
 
 const DEFAULT_CONFIG: Required<ExecutorConfig> = {
@@ -135,8 +136,11 @@ export async function runExecutor(
     })) {
       messages.push(message)
 
-      // Stream ALL messages to ensure UI updates properly
-      console.log(`Streaming: ${JSON.stringify(message)}`)
+      // Stream slimified messages — small JSON that never spans multiple stdout chunks
+      const slimMessages = slimifyMessage(message)
+      for (const slim of slimMessages) {
+        console.log(`Streaming: ${JSON.stringify(slim)}`)
+      }
 
       // Also stream completion status separately for easier detection
       if (message.type === 'result') {

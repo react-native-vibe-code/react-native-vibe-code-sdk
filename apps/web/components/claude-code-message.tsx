@@ -157,6 +157,107 @@ const SystemInitCard = memo(function SystemInitCard({ data, isStreaming }: { dat
   )
 })
 
+// Shared TodoWrite card used by both slim and legacy formats
+const TodoWriteCard = memo(function TodoWriteCard({ input, isStreaming }: { input: any; isStreaming?: boolean }) {
+  let todos: any[] = []
+
+  if (input?.todos) {
+    todos = input.todos
+  } else if (Array.isArray(input)) {
+    todos = input
+  } else if (input?.content) {
+    try {
+      const parsed = JSON.parse(input.content)
+      todos = parsed.todos || parsed
+    } catch {
+      todos = [{ text: input.content }]
+    }
+  }
+
+  return (
+    <Card className="border-indigo-200 bg-indigo-50 dark:bg-indigo-950/20 dark:border-indigo-800 relative">
+      {isStreaming && (
+        <div className="absolute top-4 right-4">
+          <Cog className="h-6 w-6 text-indigo-600 animate-cog-spin" />
+        </div>
+      )}
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <ListTodo className="h-4 w-4 text-indigo-600" />
+          Todo List
+          <Badge variant="secondary" className="text-xs ml-auto">
+            {todos.filter((t: any) => t.status === 'completed').length}/{todos.length}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          {todos.length > 0 ? (
+            todos.map((todo: any, index: number) => {
+              const isCompleted = todo.status === 'completed'
+              const isInProgress = todo.status === 'in_progress'
+
+              return (
+                <div
+                  key={index}
+                  className={`flex items-start gap-2 p-2 rounded border ${
+                    isCompleted
+                      ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800'
+                      : isInProgress
+                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800'
+                      : 'bg-background/50 border-border'
+                  }`}
+                >
+                  <div className="flex items-center justify-center w-5 h-5 mt-0.5">
+                    {isCompleted ? (
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    ) : isInProgress ? (
+                      <Cog className="h-4 w-4 text-blue-600 animate-cog-spin" />
+                    ) : (
+                      <div className="h-3 w-3 rounded-full border-2 border-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm ${isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                      {typeof todo.content === 'string' ? todo.content : (typeof todo.content === 'object' ? JSON.stringify(todo.content) : String(todo.content))}
+                    </p>
+                    {todo.activeForm && isInProgress && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        {todo.activeForm}
+                      </p>
+                    )}
+                  </div>
+                  {isCompleted && (
+                    <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                      Done
+                    </Badge>
+                  )}
+                  {isInProgress && (
+                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                      In Progress
+                    </Badge>
+                  )}
+                </div>
+              )
+            })
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                No todos found in expected format
+              </p>
+              <div className="bg-background/50 p-2 rounded border">
+                <pre className="text-xs font-mono whitespace-pre-wrap">
+                  {JSON.stringify(input, null, 2)}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+})
+
 // Card shown below first user message during app generation
 export const GeneratingAppCard = memo(function GeneratingAppCard({ isLoading = true }: { isLoading?: boolean }) {
   return (
@@ -208,6 +309,100 @@ export const GeneratingAppCard = memo(function GeneratingAppCard({ isLoading = t
 })
 
 const AssistantMessageCard = memo(function AssistantMessageCard({ data, isStreaming }: { data: any; isStreaming?: boolean }) {
+  // --- Slim format: subtype === 'text' ---
+  if (data.subtype === 'text' && data.text) {
+    return (
+      <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800 relative">
+        {isStreaming && (
+          <div className="absolute top-4 right-4">
+            <Cog className="h-6 w-6 text-green-600 animate-cog-spin" />
+          </div>
+        )}
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Bot className="h-4 w-4 text-green-600" />
+            Code Agent
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-sm">
+            <Markdown>{data.text}</Markdown>
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // --- Slim format: subtype === 'tool_use' ---
+  if (data.subtype === 'tool_use' && data.tool_name) {
+    const toolName = data.tool_name
+
+    // TodoWrite: full input preserved in slim format
+    if (toolName === 'TodoWrite' && data.input) {
+      return <TodoWriteCard input={data.input} isStreaming={isStreaming} />
+    }
+
+    // Write / Edit — headline card
+    if (toolName === 'Write' || toolName === 'Edit') {
+      const label = toolName === 'Write' ? 'Writing' : 'Editing'
+      return (
+        <CollapsibleCard
+          cardClassName="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800"
+          icon={<Edit className="h-4 w-4 text-amber-600" />}
+          title={<span className="font-normal">{label}: <code className="text-xs">{data.file_path || 'unknown file'}</code></span>}
+          streamingIndicator={isStreaming ? <Cog className="h-6 w-6 text-amber-600 animate-cog-spin" /> : undefined}
+        />
+      )
+    }
+
+    // Read — headline card
+    if (toolName === 'Read') {
+      return (
+        <CollapsibleCard
+          cardClassName="border-gray-200 bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800"
+          icon={<Eye className="h-4 w-4 text-gray-600" />}
+          title={<span className="font-normal">Reading: <code className="text-xs">{data.file_path || 'unknown file'}</code></span>}
+          streamingIndicator={isStreaming ? <Cog className="h-6 w-6 text-gray-600 animate-cog-spin" /> : undefined}
+        />
+      )
+    }
+
+    // Glob / Grep — headline card
+    if (toolName === 'Glob' || toolName === 'Grep') {
+      return (
+        <CollapsibleCard
+          cardClassName="border-purple-200 bg-purple-50 dark:bg-purple-950/20 dark:border-purple-800"
+          icon={<Search className="h-4 w-4 text-purple-600" />}
+          title={<span className="font-normal">{toolName}: <code className="text-xs">{data.pattern || '...'}</code></span>}
+          streamingIndicator={isStreaming ? <Cog className="h-6 w-6 text-purple-600 animate-cog-spin" /> : undefined}
+        />
+      )
+    }
+
+    // Bash — headline card with command preview
+    if (toolName === 'Bash') {
+      return (
+        <CollapsibleCard
+          cardClassName="border-orange-200 bg-orange-50 dark:bg-orange-950/20 dark:border-orange-800"
+          icon={<Terminal className="h-4 w-4 text-orange-600" />}
+          title={<span className="font-normal">Running: <code className="text-xs">{data.command_preview || '...'}</code></span>}
+          streamingIndicator={isStreaming ? <Cog className="h-6 w-6 text-orange-600 animate-cog-spin" /> : undefined}
+        />
+      )
+    }
+
+    // Other tools — generic headline
+    return (
+      <CollapsibleCard
+        cardClassName="border-purple-200 bg-purple-50 dark:bg-purple-950/20 dark:border-purple-800"
+        icon={<Play className="h-4 w-4 text-purple-600" />}
+        title={`Using Tool: ${toolName}`}
+        streamingIndicator={isStreaming ? <Cog className="h-6 w-6 text-purple-600 animate-cog-spin" /> : undefined}
+      />
+    )
+  }
+
+  // --- Legacy format: message.content array ---
   const message = data.message || data
   const textContent =
     message.content?.find((c: any) => c.type === 'text')?.text || ''
@@ -216,108 +411,7 @@ const AssistantMessageCard = memo(function AssistantMessageCard({ data, isStream
   if (toolUse) {
     // Special handling for TodoWrite tool
     if (toolUse.name === 'TodoWrite') {
-      // Try to extract todos from different possible structures
-      let todos = []
-
-      if (toolUse.input?.todos) {
-        todos = toolUse.input.todos
-      } else if (Array.isArray(toolUse.input)) {
-        todos = toolUse.input
-      } else if (toolUse.input?.content) {
-        // Check if content is a string with todos
-        try {
-          const parsed = JSON.parse(toolUse.input.content)
-          todos = parsed.todos || parsed
-        } catch {
-          // If not JSON, treat as single todo
-          todos = [{ text: toolUse.input.content }]
-        }
-      } else {
-        // Fallback: show the raw input as debug info
-      }
-
-      return (
-        <Card className="border-indigo-200 bg-indigo-50 dark:bg-indigo-950/20 dark:border-indigo-800 relative">
-          {isStreaming && (
-            <div className="absolute top-4 right-4">
-              <Cog className="h-6 w-6 text-indigo-600 animate-cog-spin" />
-            </div>
-          )}
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <ListTodo className="h-4 w-4 text-indigo-600" />
-              Todo List
-              <Badge variant="secondary" className="text-xs ml-auto">
-                {todos.filter((t: any) => t.status === 'completed').length}/{todos.length}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              {todos.length > 0 ? (
-                todos.map((todo: any, index: number) => {
-                  const isCompleted = todo.status === 'completed'
-                  const isInProgress = todo.status === 'in_progress'
-
-                  return (
-                    <div
-                      key={index}
-                      className={`flex items-start gap-2 p-2 rounded border ${
-                        isCompleted
-                          ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800'
-                          : isInProgress
-                          ? 'bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800'
-                          : 'bg-background/50 border-border'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center w-5 h-5 mt-0.5">
-                        {isCompleted ? (
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                        ) : isInProgress ? (
-                          <Cog className="h-4 w-4 text-blue-600 animate-cog-spin" />
-                        ) : (
-                          <div className="h-3 w-3 rounded-full border-2 border-gray-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${isCompleted ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-                          {typeof todo.content === 'string' ? todo.content : (typeof todo.content === 'object' ? JSON.stringify(todo.content) : String(todo.content))}
-                        </p>
-                        {todo.activeForm && isInProgress && (
-                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                            {todo.activeForm}
-                          </p>
-                        )}
-                      </div>
-                      {isCompleted && (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                          Done
-                        </Badge>
-                      )}
-                      {isInProgress && (
-                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                          In Progress
-                        </Badge>
-                      )}
-                    </div>
-                  )
-                })
-              ) : (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    No todos found in expected format
-                  </p>
-                  <div className="bg-background/50 p-2 rounded border">
-                    <pre className="text-xs font-mono whitespace-pre-wrap">
-                      {JSON.stringify(toolUse.input, null, 2)}
-                    </pre>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )
+      return <TodoWriteCard input={toolUse.input} isStreaming={isStreaming} />
     }
 
     // Special handling for Write tool
@@ -420,10 +514,24 @@ const AssistantMessageCard = memo(function AssistantMessageCard({ data, isStream
 })
 
 const ToolResultCard = memo(function ToolResultCard({ data, isStreaming }: { data: any; isStreaming?: boolean }) {
+  // --- Slim format: subtype === 'tool_result' ---
+  if (data.subtype === 'tool_result') {
+    const isError = !data.success
+    return (
+      <CollapsibleCard
+        cardClassName={isError ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20 dark:border-yellow-800' : 'border-gray-200 bg-gray-50 dark:bg-gray-950/20 dark:border-gray-800'}
+        icon={isError ? <AlertTriangle className="h-4 w-4 text-yellow-600" /> : <CheckCircle className="h-4 w-4 text-green-600" />}
+        title={isError ? 'Tool Error' : 'Tool Result'}
+        streamingIndicator={isStreaming ? <Cog className={`h-6 w-6 ${isError ? 'text-yellow-600' : 'text-gray-600'} animate-cog-spin`} /> : undefined}
+      />
+    )
+  }
+
+  // --- Legacy format ---
   const message = data.message || data
   const content = message.content?.[0]?.content || message.content || ''
   const isError =
-    content.includes('Error') || content.includes('error') || data.is_error
+    (typeof content === 'string' && (content.includes('Error') || content.includes('error'))) || data.is_error
 
   return (
     <CollapsibleCard

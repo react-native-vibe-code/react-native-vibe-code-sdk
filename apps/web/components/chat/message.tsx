@@ -74,6 +74,7 @@ function isClaudeCodeMessage(content: string): boolean {
     content.includes("Using text-only prompt") ||
     content.includes("'/usr/local/bin/node'") ||
     content.includes("/claude-sdk/index.ts") ||
+    content.includes("/claude-sdk/executor.mjs") ||
     content.includes("--prompt=") ||
     content.includes("--model=") ||
     content.includes("Current working directory: /home/user")

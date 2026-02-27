@@ -119,8 +119,8 @@ RUN bun install --dev @types/node@^24.0.3
 # Switch back to root for file operations
 USER root
 
-# Copy the claude execution script
-COPY templates/expo-template/claude-executor.ts index.ts
+# Copy the pre-built standalone executor bundle
+COPY templates/shared/executor.mjs executor.mjs
 
 # Copy the test script
 COPY templates/expo-template/claude-test.ts test.ts
@@ -136,7 +136,7 @@ COPY templates/expo-template/eas-login.js eas-login.js
 RUN chmod +x eas-login.js
 
 # Add start script and test-run script to package.json
-RUN node -e "const pkg = require('./package.json'); pkg.scripts = pkg.scripts || {}; pkg.scripts.start = 'tsx index.ts'; pkg.scripts['test-run'] = 'tsx test.ts'; pkg.scripts['get-structure'] = 'node get-structure.js'; pkg.scripts['edit-file'] = 'node edit-file.js'; pkg.scripts['eas-login'] = 'node eas-login.js'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
+RUN node -e "const pkg = require('./package.json'); pkg.scripts = pkg.scripts || {}; pkg.scripts.start = 'node executor.mjs'; pkg.scripts['test-run'] = 'tsx test.ts'; pkg.scripts['get-structure'] = 'node get-structure.js'; pkg.scripts['edit-file'] = 'node edit-file.js'; pkg.scripts['eas-login'] = 'node eas-login.js'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2));"
 
 # Note: ANTHROPIC_API_KEY should be set at runtime via environment variables
 # Do not hardcode API keys in the Docker image for security reasons

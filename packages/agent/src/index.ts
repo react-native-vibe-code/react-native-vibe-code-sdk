@@ -1,5 +1,6 @@
 // Main exports
 export { runExecutor } from './executor.js'
+export { slimifyMessage } from './slim-message.js'
 
 // Types
 export type {
@@ -11,6 +12,16 @@ export type {
   SessionHook,
   SDKMessage,
 } from './types.js'
+
+export type {
+  SlimMessage,
+  SlimSystemInit,
+  SlimAssistantText,
+  SlimToolUse,
+  SlimToolResult,
+  SlimToolProgress,
+  SlimResult,
+} from './slim-message.js'
 
 // Hooks
 export { createConvexDeployHook } from './hooks/convex-deploy.js'
