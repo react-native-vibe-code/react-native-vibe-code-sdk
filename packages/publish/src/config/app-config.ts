@@ -7,7 +7,7 @@
  * - wrangler.toml (Cloudflare Workers configuration)
  */
 
-import type { Sandbox } from '@e2b/code-interpreter'
+import type { ISandbox as Sandbox } from '@react-native-vibe-code/sandbox/lib'
 
 /**
  * Update app.json in the sandbox with the fantasy name

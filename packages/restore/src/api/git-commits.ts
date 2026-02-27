@@ -1,5 +1,5 @@
 import { db, projects, eq, and } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import type { GitCommitsRequest, GitCommitsResponse, Commit } from '../types'
 
 export const maxDuration = 30
@@ -52,9 +52,9 @@ export async function getGitCommits(
   }
 
   // Connect to sandbox
-  let sandbox: Sandbox
+  let sandbox: Awaited<ReturnType<typeof getSandboxProvider>['connect']>
   try {
-    sandbox = await Sandbox.connect(sandboxId)
+    sandbox = await getSandboxProvider().connect(sandboxId)
     console.log(`[Git Commits] Connected to sandbox: ${sandbox.sandboxId}`)
   } catch (error) {
     console.error(

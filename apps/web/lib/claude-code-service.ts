@@ -1,5 +1,5 @@
 import { pusherServer } from './pusher'
-import { Sandbox} from '@e2b/code-interpreter'
+import type { ISandbox } from '@react-native-vibe-code/sandbox/lib'
 import { prompt, getPromptWithCloudStatus } from '@react-native-vibe-code/prompt-engine'
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
@@ -59,7 +59,7 @@ export class ClaudeCodeService {
 
   async generateAppStreaming(
     request: AppGenerationRequest,
-    sandbox: Sandbox,
+    sandbox: ISandbox,
     callbacks: StreamingCallbacks,
   ): Promise<void> {
     try {
@@ -637,7 +637,7 @@ export class ClaudeCodeService {
 
   private async getConversationContext(
     request: AppGenerationRequest,
-    sandbox: Sandbox,
+    sandbox: ISandbox,
   ): Promise<ConversationContext> {
     // Load previous conversation history from database if exists
     const previousMessages = await this.loadConversationHistory(

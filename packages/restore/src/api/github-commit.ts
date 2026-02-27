@@ -1,5 +1,4 @@
-import { GitHubService } from '@react-native-vibe-code/sandbox'
-import { Sandbox } from '@e2b/code-interpreter'
+import { GitHubService, getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import type { GitHubCommitRequest, GitHubCommitResponse } from '../types'
 
 export const maxDuration = 300 // 5 minutes
@@ -38,10 +37,10 @@ export async function commitToGitHub(
     }
   }
 
-  // Connect to sandbox
-  let sandbox: Sandbox
+  // Connect to sandbox using the active provider
+  let sandbox: Awaited<ReturnType<typeof getSandboxProvider>['connect']>
   try {
-    sandbox = await Sandbox.connect(sandboxId)
+    sandbox = await getSandboxProvider().connect(sandboxId)
     console.log('[GitHub Commit API] Connected to sandbox:', sandboxId)
   } catch (error) {
     console.error('[GitHub Commit API] Failed to connect to sandbox:', error)

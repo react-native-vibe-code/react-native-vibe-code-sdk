@@ -1,9 +1,9 @@
 import { db, projects, eq } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import type { ISandbox } from './providers/types'
 import { detectAndNotifyRuntimeError } from '@react-native-vibe-code/error-manager/server'
 
 export async function startExpoServer(
-  sandbox: Sandbox,
+  sandbox: ISandbox,
   projectId?: string,
   customNgrokUrl?: string,
 ): Promise<{ url: string; serverReady: boolean; ngrokUrl?: string }> {

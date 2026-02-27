@@ -1,4 +1,4 @@
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider } from '@react-native-vibe-code/sandbox/lib'
 import { Octokit } from '@octokit/rest'
 import { eq, sql } from 'drizzle-orm'
 import { v4 as uuidv4 } from 'uuid'
@@ -82,7 +82,8 @@ export async function createRemix(params: {
     console.log(`[Remix] User ${userId} remixing project ${sourceProjectId} to ${newProjectId}`)
 
     // Create sandbox first
-    let sandbox: Sandbox | null = null
+    const sandboxProvider = getSandboxProvider()
+    let sandbox: Awaited<ReturnType<typeof sandboxProvider.create>> | null = null
     try {
       const templateId = {
         expo: 'sm3r39vktkmu37lna0qa',
@@ -91,14 +92,16 @@ export async function createRemix(params: {
       const templateSelection: keyof typeof templateId =
         (process.env.TEMPLATE_SELECTION as keyof typeof templateId) || 'expo'
 
-      sandbox = await Sandbox.create(templateId[templateSelection], {
+      sandbox = await sandboxProvider.create({
+        templateId: templateId[templateSelection],
+        image: process.env.DAYTONA_IMAGE,
         metadata: {
           template: sourceProject.template,
           userID: userId,
           projectId: newProjectId,
           forkedFrom: sourceProjectId,
         },
-        timeoutMs: parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000'),
+        timeoutMs: parseInt(process.env.SANDBOX_TIMEOUT_MS || process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000'),
       })
 
       console.log(`[Remix] Created sandbox: ${sandbox.sandboxId}`)
@@ -291,7 +294,7 @@ export async function createRemix(params: {
           }
 
           // Connect to source sandbox and push its code to GitHub
-          const sourceSandbox = await Sandbox.connect(sourceProject.sandboxId)
+          const sourceSandbox = await sandboxProvider.connect(sourceProject.sandboxId)
           console.log(`[Remix] Connected to source sandbox to push code`)
 
           const pushSourceScript = `#!/bin/bash

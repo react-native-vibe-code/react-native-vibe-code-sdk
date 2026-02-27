@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { projects, convexProjectCredentials } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import { getSandboxProvider, type ISandbox } from '@react-native-vibe-code/sandbox/lib'
 import { Octokit } from '@octokit/rest'
 import { GitHubService } from '@/lib/github-service'
 import { eq, and } from 'drizzle-orm'
@@ -113,7 +113,7 @@ function sendConvexError(projectId: string, logData: string): void {
 async function setupConvex(params: {
   projectId: string
   userId: string
-  sandbox: Sandbox
+  sandbox: ISandbox
   appName: string
 }): Promise<void> {
   // Check if Convex is configured
@@ -210,7 +210,7 @@ async function setupConvex(params: {
 /**
  * Write EXPO_PUBLIC_CONVEX_URL to sandbox .env.local
  */
-async function writeConvexUrlToSandbox(sandbox: Sandbox, deploymentUrl: string): Promise<void> {
+async function writeConvexUrlToSandbox(sandbox: ISandbox, deploymentUrl: string): Promise<void> {
   try {
     const { updateSandboxEnvFile } = await import('@/lib/convex/sandbox-utils')
     await updateSandboxEnvFile(sandbox, 'EXPO_PUBLIC_CONVEX_URL', deploymentUrl)
@@ -225,7 +225,7 @@ async function writeConvexUrlToSandbox(sandbox: Sandbox, deploymentUrl: string):
  */
 async function startConvexDevServer(params: {
   projectId: string
-  sandbox: Sandbox
+  sandbox: ISandbox
   adminKey: string
   deploymentUrl: string
 }): Promise<void> {
@@ -304,7 +304,8 @@ export async function POST(req: NextRequest) {
 
     // Check if project already exists with active sandbox
     let project = null
-    let sandbox: Sandbox | null = null
+    const sandboxProvider = getSandboxProvider()
+    let sandbox: ISandbox | null = null
 
     try {
       const existingProjects = await db
@@ -328,7 +329,7 @@ export async function POST(req: NextRequest) {
         // Try to connect to the existing sandbox
         if (project.sandboxId) {
           try {
-            sandbox = await Sandbox.connect(project.sandboxId)
+            sandbox = await sandboxProvider.connect(project.sandboxId)
             console.log(`Connected to existing sandbox: ${sandbox.sandboxId}`)
 
             // Set API Base URL for the sandbox app
@@ -387,15 +388,16 @@ export async function POST(req: NextRequest) {
 
     console.log(`Using template: ${templateSelection} (ID: ${templateId[templateSelection]})`)
 
-    sandbox = await Sandbox.create(templateId[templateSelection], {
-
+    sandbox = await sandboxProvider.create({
+      templateId: templateId[templateSelection],
+      image: process.env.DAYTONA_IMAGE,
       metadata: {
         template: templateId[templateSelection],
         userID: userID,
         teamID: teamID || '',
         projectId,
       },
-      timeoutMs: parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000'), // Use env var, default to 1 hour
+      timeoutMs: parseInt(process.env.SANDBOX_TIMEOUT_MS || process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000'),
     })
 
     console.log(`Created new sandbox: ${sandbox.sandboxId}`)

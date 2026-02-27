@@ -1,0 +1,47 @@
+# Daytona Workspace Configuration for Expo Sandbox
+#
+# This file configures the Daytona workspace template for React Native Expo development.
+# It mirrors the capabilities of the E2B expo-template.
+#
+# Usage with Daytona CLI:
+#   daytona create --config packages/sandbox/templates/daytona-expo-template/daytona.yaml
+#
+# Or programmatically via the @daytonaio/sdk:
+#   const workspace = await daytona.create({
+#     image: '<your-registry>/react-native-vibe-code/expo-sandbox:latest',
+#     envVars: { ANTHROPIC_API_KEY: '...' },
+#     resources: { cpu: 4, memory: 4096 },
+#   })
+
+name: expo-sandbox
+description: React Native Expo sandbox for AI-powered app generation
+
+# Docker image (build from the Dockerfile in this directory and push to your registry)
+# Replace with your actual registry URL after building:
+#   docker build -t <registry>/react-native-vibe-code/expo-sandbox:latest \
+#     -f packages/sandbox/templates/daytona-expo-template/Dockerfile .
+#   docker push <registry>/react-native-vibe-code/expo-sandbox:latest
+image: ubuntu:22.04  # Replace with your built image
+
+# Resource allocation (matches E2B template configuration)
+resources:
+  cpu: 4
+  memory: 4096  # MB
+
+# Exposed ports
+ports:
+  - port: 8081
+    name: expo-web
+    description: Expo web server
+
+# Environment variables (set sensitive values via Daytona secrets or DAYTONA_IMAGE_ENV)
+# These are provided at runtime via the @daytonaio/sdk envVars option.
+env:
+  NODE_OPTIONS: "--max_old_space_size=4096"
+  TMPDIR: "/tmp/metro-cache"
+  BUN_INSTALL_CACHE_DIR: "/tmp/bun-cache"
+  # ANTHROPIC_API_KEY: set at runtime
+  # NGROK_AUTHTOKEN: set at runtime
+
+# Auto-stop interval in minutes (equivalent to E2B's 1-hour timeout)
+autoStopInterval: 60

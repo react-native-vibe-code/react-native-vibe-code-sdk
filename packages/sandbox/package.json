@@ -46,7 +46,9 @@
     "type-check": "tsc --noEmit",
     "build:sandbox:expo": "e2b template build --config templates/expo-template/e2b.toml --name 'capsule-expo-sandbox'",
     "build:sandbox:tamagui": "e2b template build --config templates/tamagui-template/e2b.toml --name 'capsule-tamagui-sandbox'",
-    "build:sandbox:github": "e2b template build --config templates/github-template/e2b.toml --name 'capsule-github-sandbox'"
+    "build:sandbox:github": "e2b template build --config templates/github-template/e2b.toml --name 'capsule-github-sandbox'",
+    "build:sandbox:expo:daytona": "docker build -f templates/daytona-expo-template/Dockerfile -t react-native-vibe-code/expo-sandbox:latest .",
+    "build:sandbox:github:daytona": "docker build -f templates/daytona-github-template/Dockerfile -t react-native-vibe-code/github-sandbox:latest ."
   },
   "publishConfig": {
     "access": "public"
@@ -61,6 +63,7 @@
     "@react-native-vibe-code/error-manager": "workspace:*",
     "@react-native-vibe-code/ui": "workspace:*",
     "@e2b/code-interpreter": "2.1.0",
+    "@daytonaio/sdk": "^0.1.0",
     "@anthropic-ai/claude-agent-sdk": "^0.1.9",
     "@octokit/rest": "^22.0.0",
     "@vercel/blob": "^2.0.0",

@@ -1,4 +1,4 @@
-import { Sandbox } from '@e2b/code-interpreter'
+import type { ISandbox } from './providers/types'
 
 export interface GitHubConfig {
   owner: string
@@ -16,7 +16,7 @@ export class GitHubService {
    * Initialize git repository and push initial code to GitHub
    */
   async initializeRepository(
-    sandbox: Sandbox,
+    sandbox: ISandbox,
     projectId: string,
     repositoryName: string,
     commitMessage: string = 'Initial commit'
@@ -80,7 +80,7 @@ fi
    * Commit and push changes to GitHub
    */
   async commitAndPush(
-    sandbox: Sandbox,
+    sandbox: ISandbox,
     repositoryName: string,
     commitMessage: string,
     files?: string[]
@@ -137,7 +137,7 @@ echo "Successfully pushed changes to GitHub"
    * Pull latest changes from GitHub
    */
   async pullChanges(
-    sandbox: Sandbox,
+    sandbox: ISandbox,
     repositoryName: string
   ): Promise<boolean> {
     try {
@@ -173,7 +173,7 @@ echo "Successfully pulled latest changes"
   /**
    * Get git status
    */
-  async getStatus(sandbox: Sandbox): Promise<string> {
+  async getStatus(sandbox: ISandbox): Promise<string> {
     try {
       const execution = await sandbox.commands.run('cd /home/user/app && git status --porcelain', {
         timeoutMs: 10000,
@@ -189,7 +189,7 @@ echo "Successfully pulled latest changes"
   /**
    * Check if directory is a git repository
    */
-  async isGitRepository(sandbox: Sandbox): Promise<boolean> {
+  async isGitRepository(sandbox: ISandbox): Promise<boolean> {
     try {
       const execution = await sandbox.commands.run('cd /home/user/app && git status', {
         timeoutMs: 5000,
@@ -204,7 +204,7 @@ echo "Successfully pulled latest changes"
   /**
    * Create a zip archive of the project
    */
-  async createProjectArchive(sandbox: Sandbox): Promise<Buffer | null> {
+  async createProjectArchive(sandbox: ISandbox): Promise<Buffer | null> {
     try {
       const zipScript = `#!/bin/bash
 set -e
