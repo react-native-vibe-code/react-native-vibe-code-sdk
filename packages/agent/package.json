@@ -41,7 +41,7 @@
   ],
   "scripts": {
     "build": "tsup && pnpm build:standalone",
-    "build:standalone": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=es2022 --outfile=dist/standalone.mjs --external:@anthropic-ai/claude-agent-sdk --banner:js='#!/usr/bin/env node'",
+    "build:standalone": "esbuild src/cli.ts --bundle --platform=node --format=esm --target=es2022 --outfile=dist/standalone.mjs --external:@anthropic-ai/claude-agent-sdk",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit"
   },
