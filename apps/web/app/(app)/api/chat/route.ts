@@ -220,6 +220,7 @@ export async function POST(req: Request) {
 
   // Call claude-code handler directly to get the streaming response
   let claudeCodeResult: ClaudeCodeResponse | null = null
+  let messagesSavedToDb = false
 
   if (projectId && userId && lastUserMessage) {
     try {
@@ -298,13 +299,54 @@ export async function POST(req: Request) {
                     }
                   }
 
+                  // Helper to save messages to database - prevents loss on stream break
+                  const saveMessagesToDatabase = async (content: string, source: string) => {
+                    if (messagesSavedToDb) {
+                      console.log(`[Chat Route] saveMessagesToDatabase(${source}): already saved, skipping`)
+                      return
+                    }
+                    if (!projectId || !userId || !content) {
+                      console.log(`[Chat Route] saveMessagesToDatabase(${source}): missing projectId/userId/content, skipping`)
+                      return
+                    }
+                    messagesSavedToDb = true
+                    try {
+                      console.log(`[Chat Route] saveMessagesToDatabase(${source}): saving ${content.length} chars`)
+                      const assistantMessageId = crypto.randomUUID()
+                      const finalAssistantMessage: UIMessage = {
+                        id: assistantMessageId,
+                        role: 'assistant' as const,
+                        content,
+                        createdAt: new Date(),
+                        parts: [{ type: 'text', text: content }],
+                        metadata: claudeCodeResult ? { claudeCodeResult } : undefined,
+                      } as any
+
+                      const updatedMessages: UIMessage[] = [...messages, finalAssistantMessage]
+                      const messagesForDb = updatedMessages.map(msg => ({
+                        ...msg,
+                        createdAt: msg.createdAt
+                          ? (typeof msg.createdAt === 'string' ? new Date(msg.createdAt) : msg.createdAt)
+                          : new Date()
+                      }))
+
+                      await saveProjectMessages(projectId, userId, messagesForDb)
+                      console.log(`[Chat Route] saveMessagesToDatabase(${source}): saved successfully`)
+                    } catch (error) {
+                      console.error(`[Chat Route] saveMessagesToDatabase(${source}): failed:`, error)
+                      messagesSavedToDb = false // Allow retry from another path
+                    }
+                  }
+
                   // Heartbeat timer to detect stale streams
-                  const heartbeatInterval = setInterval(() => {
+                  const heartbeatInterval = setInterval(async () => {
                     const timeSinceActivity = Date.now() - lastActivityTime
                     // If no activity for 90 seconds, consider stream stale
                     if (timeSinceActivity > 90000 && !isStreamClosed && !isClosing && !hasReceivedCompletion) {
                       console.warn('[Chat Route] Stream appears stale, no activity for 90s')
                       clearInterval(heartbeatInterval)
+                      const timeoutContent = fullContent + '\n\n⚠️ Stream timeout - connection may have been interrupted'
+                      await saveMessagesToDatabase(timeoutContent, 'heartbeat-timeout')
                       safeCloseStream('length', '\n\n⚠️ Stream timeout - connection may have been interrupted')
                     }
                   }, 10000) // Check every 10 seconds
@@ -338,7 +380,7 @@ export async function POST(req: Request) {
                             textDelta: content,
                           })
                         },
-                        onComplete: (result: any) => {
+                        onComplete: async (result: any) => {
                           clearInterval(heartbeatInterval)
                           hasReceivedCompletion = true
 
@@ -353,6 +395,9 @@ export async function POST(req: Request) {
                           const summaryContent = `\n\n✅ ${result.summary}`
                           fullContent += summaryContent
 
+                          // Save to DB BEFORE closing the stream
+                          await saveMessagesToDatabase(fullContent, 'onComplete')
+
                           // Use safe helpers for final message and close
                           safeEnqueue({
                             type: 'text-delta',
@@ -362,12 +407,15 @@ export async function POST(req: Request) {
 
                           console.log('[Chat Route] Stream completed successfully. Messages sent:', messageCount)
                         },
-                        onError: (error: string) => {
+                        onError: async (error: string) => {
                           clearInterval(heartbeatInterval)
                           console.error('[Chat Route] Handler error:', error)
 
                           const errorContent = `\n❌ Error: ${error}`
                           fullContent += errorContent
+
+                          // Save to DB BEFORE closing the stream
+                          await saveMessagesToDatabase(fullContent, 'onError')
 
                           safeCloseStream('error', errorContent)
                         },
@@ -391,6 +439,11 @@ export async function POST(req: Request) {
                     clearInterval(heartbeatInterval)
 
                     const errorMessage = error instanceof Error ? error.message : 'Streaming error'
+                    const errorContent = fullContent + `\n❌ Error: ${errorMessage}`
+
+                    // Save to DB BEFORE closing the stream
+                    await saveMessagesToDatabase(errorContent, 'catch')
+
                     safeCloseStream('error', `\n❌ Error: ${errorMessage}`)
                   }
                 },
@@ -402,9 +455,9 @@ export async function POST(req: Request) {
         } as any,
         messages: (messages as any),
         onFinish: async ({ text }) => {
-          // Save messages to database when streaming finishes
-          if (projectId && userId) {
-            console.log('[Chat Route] onFinish called with text length:', text.length)
+          // Fallback: only save if no earlier path (onComplete/onError/catch) already saved
+          if (!messagesSavedToDb && projectId && userId) {
+            console.log('[Chat Route] onFinish fallback: saving messages (text length:', text.length, ')')
             try {
               const assistantMessageId = crypto.randomUUID()
               const finalAssistantMessage: UIMessage = {
@@ -416,14 +469,7 @@ export async function POST(req: Request) {
                 metadata: claudeCodeResult ? { claudeCodeResult } : undefined,
               } as any
 
-              console.log('[Chat Route] Created assistant message with ID:', assistantMessageId)
-
-              // The messages should already have annotations if they were sent with edit data
-              let updatedMessages: UIMessage[] = [...messages]
-
-              updatedMessages = [...updatedMessages, finalAssistantMessage]
-
-              // Convert createdAt to Date objects for database compatibility
+              const updatedMessages: UIMessage[] = [...messages, finalAssistantMessage]
               const messagesForDb = updatedMessages.map(msg => ({
                 ...msg,
                 createdAt: msg.createdAt
@@ -431,18 +477,14 @@ export async function POST(req: Request) {
                   : new Date()
               }))
 
-              console.log('[Chat Route] Saving messages to database:', {
-                projectId,
-                userId,
-                totalMessages: messagesForDb.length,
-                messageIds: messagesForDb.map(m => ({ id: m.id, role: m.role }))
-              })
-
               await saveProjectMessages(projectId, userId, messagesForDb)
-              console.log('[Chat Route] Messages saved successfully')
+              messagesSavedToDb = true
+              console.log('[Chat Route] onFinish fallback: messages saved successfully')
             } catch (error) {
-              console.error('[Chat Route] Failed to save messages:', error)
+              console.error('[Chat Route] onFinish fallback: failed to save messages:', error)
             }
+          } else {
+            console.log('[Chat Route] onFinish: messages already saved, skipping')
           }
         },
       })

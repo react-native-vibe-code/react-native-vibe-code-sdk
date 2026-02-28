@@ -335,16 +335,23 @@ function ProjectPageInternal() {
         console.log('[Chat] Assistant message finished, reloading preview iframes')
         reloadPreviewIframes()
 
-        // Keep only the last 2 messages (user + assistant) to prevent bloat
-        setTimeout(() => {
-          setMessages((prev) => {
-            if (prev.length > 2) {
-              console.log(`[Chat] Trimming messages from ${prev.length} to last 2 (clean slate mode)`)
-              return prev.slice(-2)
-            }
-            return prev
-          })
-        }, 100)
+        // Only trim messages on successful completion (✅ marker present)
+        // Error responses (❌) should not be trimmed to preserve error context
+        const isSuccessful = message.content?.includes('✅')
+        if (isSuccessful) {
+          // Keep only the last 2 messages (user + assistant) to prevent bloat
+          setTimeout(() => {
+            setMessages((prev) => {
+              if (prev.length > 2) {
+                console.log(`[Chat] Trimming messages from ${prev.length} to last 2 (clean slate mode)`)
+                return prev.slice(-2)
+              }
+              return prev
+            })
+          }, 100)
+        } else {
+          console.log('[Chat] Skipping message trim - response did not complete successfully')
+        }
       }
     },
     onError: (error: Error) => {
@@ -369,6 +376,28 @@ function ProjectPageInternal() {
         hasReceivedContentRef.current = false // Reset for next message
         currentRequestIdRef.current = null // Clear request ID
         setIsRetrying(false)
+
+        // Re-sync from DB after a delay to pick up messages saved by the backend
+        setTimeout(async () => {
+          try {
+            console.log('[Chat] Re-syncing messages from DB after stream error...')
+            const response = await fetch('/api/chat/history', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ projectId, userId: session?.user?.id, limit: 2 }),
+            })
+            if (response.ok) {
+              const { messages: historyMessages } = await response.json()
+              if (historyMessages && historyMessages.length > 0) {
+                console.log('[Chat] Re-synced', historyMessages.length, 'messages from DB')
+                setMessages(historyMessages)
+              }
+            }
+          } catch (syncError) {
+            console.error('[Chat] Failed to re-sync messages from DB:', syncError)
+          }
+        }, 2000)
+
         return
       }
 
