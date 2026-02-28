@@ -5,12 +5,13 @@ import { useState, useEffect } from 'react'
 export const useHoverWithChannel = () => {
   const [isHoverEnabled, setIsHoverEnabled] = useState(false)
 
-  // Get sandboxId from environment or URL params
+  // Get sandboxId from environment variable (set in .env.local by server-utils)
+  // Note: URL query params are stripped by Expo Router v6 via history.replaceState
   const sandboxId =
     typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('sandboxId') ||
-        process.env.SANDBOX_ID
-      : process.env.SANDBOX_ID
+        process.env.EXPO_PUBLIC_SANDBOX_ID
+      : process.env.EXPO_PUBLIC_SANDBOX_ID
 
   // Listen for hover mode changes via Pusher
   useEffect(() => {

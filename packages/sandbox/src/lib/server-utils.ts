@@ -158,6 +158,10 @@ export async function startExpoServer(
       envVars.set('EXPO_PUBLIC_PROJECT_ID', projectId)
       console.log('[Server Utils] Set EXPO_PUBLIC_PROJECT_ID:', projectId)
 
+      // Set EXPO_PUBLIC_SANDBOX_ID so the hover system can identify the sandbox
+      envVars.set('EXPO_PUBLIC_SANDBOX_ID', sandbox.sandboxId)
+      console.log('[Server Utils] Set EXPO_PUBLIC_SANDBOX_ID:', sandbox.sandboxId)
+
       // Convert map back to lines
       const newLines = Array.from(envVars.entries()).map(
         ([key, value]) => `${key}=${value}`
