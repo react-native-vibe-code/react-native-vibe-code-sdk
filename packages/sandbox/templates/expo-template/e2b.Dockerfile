@@ -145,6 +145,9 @@ RUN node -e "const pkg = require('./package.json'); pkg.scripts = pkg.scripts ||
 # Pre-create generated_code directory with proper permissions
 RUN mkdir -p /claude-sdk/generated_code && chmod 755 /claude-sdk/generated_code && chown -R user:user /claude-sdk
 
+# Pre-create .claude settings directory so the SDK doesn't fail on write
+RUN mkdir -p /home/user/.claude && chown -R user:user /home/user/.claude
+
 # Return to app directory and switch to user
 WORKDIR /home/user/app
 USER user
