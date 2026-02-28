@@ -49,6 +49,9 @@ import { AppSidebar } from '@/components/app-sidebar'
 import Loading from './loading'
 
 function ProjectPageInternal() {
+  // Toggle to true to force expo-testing template during development
+  const EXPO_TESTING = true
+
   const params = useParams()
   const projectID = params?.id as string
   const router = useRouter()
@@ -75,7 +78,7 @@ function ProjectPageInternal() {
     })
   }, [])
   const [selectedTemplate, setSelectedTemplate] = useState<'auto' | TemplateId>(
-    'react-native-expo',
+    EXPO_TESTING ? 'expo-testing' : 'react-native-expo',
   )
   const [languageModel, setLanguageModel] = useCookieStorage<LLMModelConfig>(
     'languageModel',
@@ -1735,7 +1738,7 @@ function ProjectPageInternal() {
     console.log('Creating new project with:', {
       id: projectId,
       title: 'Generating project name...',
-      template: templateFromUrl || selectedTemplate || 'react-native-expo',
+      template: EXPO_TESTING ? 'expo-testing' : (templateFromUrl || selectedTemplate || 'react-native-expo'),
       userID: session?.user?.id,
     })
 
@@ -1748,7 +1751,7 @@ function ProjectPageInternal() {
         body: JSON.stringify({
           id: projectId,
           title: 'Generating project name...',
-          template: templateFromUrl || selectedTemplate || 'react-native-expo',
+          template: EXPO_TESTING ? 'expo-testing' : (templateFromUrl || selectedTemplate || 'react-native-expo'),
           userID: session?.user?.id,
         }),
       })
@@ -1880,7 +1883,7 @@ function ProjectPageInternal() {
           projectId: project.id,
           userID: session?.user?.id,
           teamID: userTeam?.id,
-          chooseTemplate: 'expo',
+          chooseTemplate: EXPO_TESTING ? 'expo-testing' : 'expo',
           firstMessage: firstMessage ? { role: 'user', content: firstMessage } : undefined, // Pass first message for title generation
         }),
       })
@@ -1966,7 +1969,7 @@ function ProjectPageInternal() {
           sbxId: result.sandboxId,
           projectId: result.projectId,
           projectTitle: result.projectTitle,
-          template: project.template || 'react-native-expo',
+          template: EXPO_TESTING ? 'expo-testing' : (project.template || 'react-native-expo'),
           recreated: result.recreated,
         })
 
