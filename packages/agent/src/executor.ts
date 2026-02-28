@@ -119,6 +119,21 @@ export async function runExecutor(
       hooksConfig['SessionEnd'] = [{ hooks: hooks.onSessionEnd }]
     }
 
+    // Build system prompt option
+    const systemPromptOption = args.systemPrompt
+      ? {
+          type: 'preset' as const,
+          preset: 'claude_code' as const,
+          append: args.systemPrompt,
+        }
+      : undefined
+
+    if (args.systemPrompt) {
+      console.log('System prompt loaded, length:', args.systemPrompt.length)
+    } else {
+      console.log('WARNING: No system prompt provided — agent will use default behavior')
+    }
+
     for await (const message of query({
       prompt: finalPrompt,
       options: {
@@ -126,8 +141,8 @@ export async function runExecutor(
         permissionMode: 'bypassPermissions',
         // Load skills from filesystem - required for Agent Skills to work
         settingSources: ['user', 'project'],
-        // Enable file manipulation tools plus Skill for user-defined skills
-        // allowedTools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'Skill'],
+        // Pass system prompt so agent knows it's a React Native/Expo builder
+        ...(systemPromptOption && { systemPrompt: systemPromptOption }),
         // Pass model selection if provided
         ...(args.model && { model: args.model }),
         // Add hooks if configured
