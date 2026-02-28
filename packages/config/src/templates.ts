@@ -8,6 +8,13 @@ const templates: Templates = {
     instructions: 'A React Native Expo app that reloads automatically.',
     port: 8081,
   },
+  'expo-testing': {
+    name: 'Expo Testing',
+    lib: ['react-native', 'expo'],
+    file: 'App.tsx',
+    instructions: 'A React Native Expo app that reloads automatically.',
+    port: 8081,
+  },
 }
 
 export default templates
