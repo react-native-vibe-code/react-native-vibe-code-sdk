@@ -45,6 +45,9 @@
     },
     "build:sandbox:expo-testing": {
       "cache": false
+    },
+    "build:standalone": {
+      "cache": false
     }
   }
 }

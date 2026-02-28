@@ -23,6 +23,7 @@
     "db:migrate": "turbo run db:migrate --filter=@react-native-vibe-code/database",
     "db:studio": "turbo run db:studio --filter=@react-native-vibe-code/database",
     "db:push": "turbo run db:push --filter=@react-native-vibe-code/database",
+    "build:agent": "turbo run build:standalone --filter=@react-native-vibe-code/agent",
     "build:sandbox:expo": "turbo run build:sandbox:expo --filter=@react-native-vibe-code/sandbox",
     "build:sandbox:tamagui": "turbo run build:sandbox:tamagui --filter=@react-native-vibe-code/sandbox",
     "build:sandbox:github": "turbo run build:sandbox:github --filter=@react-native-vibe-code/sandbox",
