@@ -42,6 +42,9 @@
     },
     "build:sandbox:github": {
       "cache": false
+    },
+    "build:sandbox:expo-testing": {
+      "cache": false
     }
   }
 }

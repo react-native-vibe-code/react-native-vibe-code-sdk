@@ -26,6 +26,7 @@
     "build:sandbox:expo": "turbo run build:sandbox:expo --filter=@react-native-vibe-code/sandbox",
     "build:sandbox:tamagui": "turbo run build:sandbox:tamagui --filter=@react-native-vibe-code/sandbox",
     "build:sandbox:github": "turbo run build:sandbox:github --filter=@react-native-vibe-code/sandbox",
+    "build:sandbox:expo-testing": "turbo run build:sandbox:expo-testing --filter=@react-native-vibe-code/sandbox",
     "e2b:kill-all": "e2b sandbox kill --all",
     "e2b:kill": "e2b sandbox kill",
     "e2b:connect": "e2b sandbox connect",

@@ -3,7 +3,7 @@
 
 # Python SDK
 # from e2b import Sandbox, AsyncSandbox
-# sandbox = Sandbox("expo-testing") # Sync sandbox
+# sandbox = Sandbox.create("expo-testing") # Sync sandbox
 # sandbox = await AsyncSandbox.create("expo-testing") # Async sandbox
 
 # JS SDK
@@ -13,6 +13,6 @@
 team_id = "ca97f034-46fd-4f61-96f8-a31147b4e6eb"
 memory_mb = 4_096
 cpu_count = 4
-dockerfile = "sandbox-templates/expo-template/e2b.Dockerfile"
+dockerfile = "templates/expo-template/e2b.Dockerfile"
 template_name = "expo-testing"
 template_id = "wxe2y93k4kafhbwqg2br"

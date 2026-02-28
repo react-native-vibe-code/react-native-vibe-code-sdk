@@ -47,7 +47,8 @@
     "copy:executor": "mkdir -p templates/shared && cp ../agent/dist/standalone.mjs templates/shared/executor.mjs",
     "build:sandbox:expo": "pnpm copy:executor && e2b template build --config templates/expo-template/e2b.toml --name 'capsule-expo-sandbox'",
     "build:sandbox:tamagui": "e2b template build --config templates/tamagui-template/e2b.toml --name 'capsule-tamagui-sandbox'",
-    "build:sandbox:github": "pnpm copy:executor && e2b template build --config templates/github-template/e2b.toml --name 'capsule-github-sandbox'"
+    "build:sandbox:github": "pnpm copy:executor && e2b template build --config templates/github-template/e2b.toml --name 'capsule-github-sandbox'",
+    "build:sandbox:expo-testing": "pnpm copy:executor && e2b template build --config templates/expo-template/e2b-testing.toml --name 'expo-testing'"
   },
   "publishConfig": {
     "access": "public"
