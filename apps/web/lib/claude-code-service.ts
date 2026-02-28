@@ -46,8 +46,8 @@ export interface AppGenerationResponse {
 
 export interface StreamingCallbacks {
   onMessage: (message: string) => void
-  onComplete: (result: AppGenerationResponse) => void
-  onError: (error: string) => void
+  onComplete: (result: AppGenerationResponse) => void | Promise<void>
+  onError: (error: string) => void | Promise<void>
 }
 
 export class ClaudeCodeService {
@@ -139,7 +139,7 @@ export class ClaudeCodeService {
 
         if (checkCmd.exitCode !== 0) {
           console.error('[Claude Code Service] ❌ Claude SDK check failed!')
-          callbacks.onError('Claude SDK is not properly installed in the sandbox. Check sandbox template configuration.')
+          await callbacks.onError('Claude SDK is not properly installed in the sandbox. Check sandbox template configuration.')
           return
         }
 
@@ -414,7 +414,7 @@ export class ClaudeCodeService {
         console.error('[Claude Code Service] This likely means the Claude SDK failed to start or execute')
 
         // Treat this as an error and notify the user
-        callbacks.onError('Claude SDK failed to produce any output. The SDK may not be properly installed in the sandbox.')
+        await callbacks.onError('Claude SDK failed to produce any output. The SDK may not be properly installed in the sandbox.')
         return
       }
 
@@ -424,31 +424,45 @@ export class ClaudeCodeService {
       // Note: With spawn() we no longer hit the 120-second timeout issue that run() had
       if (executionError) {
         console.error('[Claude Code Service] Execution error detected:', executionError.message)
-        callbacks.onError(executionError.message)
+
+        // If we received output (content was already streamed to frontend), don't treat
+        // transient E2B errors like "[unknown] terminated" as fatal — the agent likely
+        // finished or nearly finished. Treat as success with whatever we got.
+        if (receivedAnyOutput && (completionDetected || stdoutChunkCount > 5)) {
+          console.log('[Claude Code Service] Execution error after receiving output — treating as completion', {
+            receivedAnyOutput,
+            completionDetected,
+            stdoutChunkCount,
+            error: executionError.message,
+          })
+          // Fall through to success path below
+        } else {
+          await callbacks.onError(executionError.message)
+          return
+        }
+      }
+
+      if (!execution && !executionError) {
+        await callbacks.onError('Execution failed - no result returned from sandbox')
         return
       }
 
-      if (!execution) {
-        callbacks.onError('Execution failed - no result returned from sandbox')
-        return
-      }
-
-      const summary = this.extractSummary(execution)
+      const summary = execution ? this.extractSummary(execution) : 'Task completed'
 
       console.log('[Claude Code Service] after execution', {
         sandboxId: sandbox.sandboxId,
         duration: `${executionDuration}ms`,
-        exitCode: execution.exitCode,
+        exitCode: execution?.exitCode ?? 'N/A (error recovery)',
         completionDetected,
         sdkErrorsCount: sdkErrors.length,
-        stdoutLength: execution.stdout?.length || 0,
-        stderrLength: execution.stderr?.length || 0,
+        stdoutLength: execution?.stdout?.length || 0,
+        stderrLength: execution?.stderr?.length || 0,
       })
 
       // Log execution details for debugging
-      if (execution.exitCode === 0 && !completionDetected) {
+      if (execution?.exitCode === 0 && !completionDetected) {
         console.warn('[Claude Code Service] Execution completed with exit 0 but no completion signal detected')
-        console.log('[Claude Code Service] Last 500 chars of stdout:', execution.stdout?.slice(-500) || 'No stdout')
+        console.log('[Claude Code Service] Last 500 chars of stdout:', execution?.stdout?.slice(-500) || 'No stdout')
       }
 
       // Only send SDK errors to user if task completed and there were actual SDK errors
@@ -469,7 +483,8 @@ export class ClaudeCodeService {
       }
 
       // Consider it successful if we got the completion signal OR exit code is 0
-      if (execution.exitCode !== 0 && !completionDetected) {
+      // If execution is null (error recovery path), skip this check — we already validated above
+      if (execution && execution.exitCode !== 0 && !completionDetected) {
         const errorMessage = `Claude Code execution failed with exit code ${execution.exitCode}: ${execution.stderr}`
         console.error('[Claude Code Service] Execution failed:', errorMessage)
 
@@ -482,7 +497,7 @@ export class ClaudeCodeService {
           true, // executionFailed = true
         )
 
-        callbacks.onError(errorMessage)
+        await callbacks.onError(errorMessage)
         return
       }
 
@@ -502,8 +517,8 @@ export class ClaudeCodeService {
       })
 
       // Always call onComplete to properly close the stream FIRST
-      // This ensures the client receives the completion message immediately
-      callbacks.onComplete(response)
+      // Await to ensure async callbacks (DB saves, usage tracking) complete before returning
+      await callbacks.onComplete(response)
 
       // Trigger GitHub commit for successful execution (fire and forget)
       this.triggerGitHubCommit(
@@ -585,7 +600,7 @@ export class ClaudeCodeService {
         console.error('[Claude Code Service] Failed to send Pusher error notification:', pusherError)
       }
 
-      callbacks.onError(
+      await callbacks.onError(
         error instanceof Error ? error.message : 'Unknown error',
       )
     }

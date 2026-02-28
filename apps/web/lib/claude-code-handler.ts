@@ -26,8 +26,8 @@ export interface ClaudeCodeHandlerRequest {
 
 export interface ClaudeCodeStreamCallbacks {
   onMessage: (message: string) => void
-  onComplete: (result: any) => void
-  onError: (error: string) => void
+  onComplete: (result: any) => void | Promise<void>
+  onError: (error: string) => void | Promise<void>
 }
 
 /**
@@ -51,12 +51,12 @@ export async function handleClaudeCodeGeneration(
   })
 
   if (!request.userID) {
-    callbacks.onError('User ID is required')
+    await callbacks.onError('User ID is required')
     return
   }
 
   if (!request.projectId) {
-    callbacks.onError('Project ID is required')
+    await callbacks.onError('Project ID is required')
     return
   }
 
@@ -99,7 +99,7 @@ export async function handleClaudeCodeGeneration(
       }
 
       if (!project) {
-        callbacks.onError('Project not found after waiting. Please try again.')
+        await callbacks.onError('Project not found after waiting. Please try again.')
         return
       }
     }
@@ -128,7 +128,7 @@ export async function handleClaudeCodeGeneration(
       }
 
       if (!targetSandboxId) {
-        callbacks.onError('Container is still being created. Please wait a moment and try again.')
+        await callbacks.onError('Container is still being created. Please wait a moment and try again.')
         return
       }
     }
@@ -138,7 +138,7 @@ export async function handleClaudeCodeGeneration(
     console.log(`[Claude Code Handler] Connected to sandbox: ${sandbox.sandboxId}`)
   } catch (error) {
     console.error('[Claude Code Handler] Error checking for existing project:', error)
-    callbacks.onError('Failed to find project or sandbox')
+    await callbacks.onError('Failed to find project or sandbox')
     return
   }
 
@@ -289,9 +289,9 @@ export async function handleClaudeCodeGeneration(
             conversationId: result.conversationId,
           }
 
-          callbacks.onComplete(finalResult)
+          await callbacks.onComplete(finalResult)
         },
-        onError: (error: string) => {
+        onError: async (error: string) => {
           console.error('[Claude Code Handler] Stream error received from service:', {
             error,
             projectId: request.projectId,
@@ -299,7 +299,7 @@ export async function handleClaudeCodeGeneration(
             sandboxId: sandbox?.sandboxId,
             timestamp: new Date().toISOString(),
           })
-          callbacks.onError(error)
+          await callbacks.onError(error)
         },
       },
     )
@@ -316,6 +316,6 @@ export async function handleClaudeCodeGeneration(
     })
     console.error('===================================================================')
 
-    callbacks.onError(error instanceof Error ? error.message : 'Internal server error')
+    await callbacks.onError(error instanceof Error ? error.message : 'Internal server error')
   }
 }
