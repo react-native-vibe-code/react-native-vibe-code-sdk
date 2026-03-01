@@ -91,6 +91,10 @@ export function PreviewPanel({
   const [isRestartingServer, setIsRestartingServer] = useState(false)
   const [isSandboxInitializing, setIsSandboxInitializing] = useState(false)
   const [isRecreatingSandbox, setIsRecreatingSandbox] = useState(false)
+  const [recreationFailed, setRecreationFailed] = useState(false) // Stops retries after max attempts
+  const recreationAttemptsRef = useRef(0)
+  const isRecreatingSandboxRef = useRef(false) // Ref to avoid stale closures in health check
+  const maxRecreationRetries = 3
   const [isIframeLoading, setIsIframeLoading] = useState(true)
   const [iframeKey, setIframeKey] = useState(0) // Key to force iframe remount
   const [connectionRetryCount, setConnectionRetryCount] = useState(0)
@@ -192,10 +196,22 @@ export function PreviewPanel({
 
   // Handle sandbox recreation when sandbox container is gone
   const handleRecreateSandbox = async () => {
-    if (!projectId || !userId || isRecreatingSandbox) return
+    if (!projectId || !userId || isRecreatingSandboxRef.current) return
 
-    console.log('[PreviewPanel] Recreating sandbox for project:', projectId)
+    // Check if we've exceeded max retries
+    if (recreationAttemptsRef.current >= maxRecreationRetries) {
+      console.log(`[PreviewPanel] Max recreation attempts (${maxRecreationRetries}) reached, stopping auto-retry`)
+      setRecreationFailed(true)
+      setIsSandboxInitializing(false)
+      return
+    }
+
+    recreationAttemptsRef.current++
+    const attempt = recreationAttemptsRef.current
+    console.log(`[PreviewPanel] Recreating sandbox for project: ${projectId} (attempt ${attempt}/${maxRecreationRetries})`)
+
     setIsRecreatingSandbox(true)
+    isRecreatingSandboxRef.current = true
     setIsSandboxInitializing(true)
 
     try {
@@ -217,20 +233,33 @@ export function PreviewPanel({
         toast.success('Sandbox recreated successfully')
         setIsSandboxDown(false)
         setIsServerDown(false)
+        recreationAttemptsRef.current = 0
+        setRecreationFailed(false)
 
         // Reload the page to get fresh URLs and state
         setTimeout(() => {
           window.location.reload()
         }, 1000)
       } else {
-        console.error('[PreviewPanel] Failed to recreate sandbox:', data.error)
-        toast.error(`Failed to recreate sandbox: ${data.error}`)
+        console.error(`[PreviewPanel] Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries}):`, data.error)
+        if (attempt >= maxRecreationRetries) {
+          toast.error('Failed to recreate sandbox after multiple attempts. Please try refreshing the page.')
+          setRecreationFailed(true)
+        } else {
+          toast.error(`Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries})`)
+        }
       }
     } catch (error) {
-      console.error('[PreviewPanel] Error recreating sandbox:', error)
-      toast.error('Failed to recreate sandbox')
+      console.error(`[PreviewPanel] Error recreating sandbox (attempt ${attempt}/${maxRecreationRetries}):`, error)
+      if (attempt >= maxRecreationRetries) {
+        toast.error('Failed to recreate sandbox after multiple attempts. Please try refreshing the page.')
+        setRecreationFailed(true)
+      } else {
+        toast.error(`Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries})`)
+      }
     } finally {
       setIsRecreatingSandbox(false)
+      isRecreatingSandboxRef.current = false
       setIsSandboxInitializing(false)
     }
   }
@@ -505,15 +534,22 @@ export function PreviewPanel({
         setIsSandboxDown(!isAlive)
 
         if (!isAlive && sandboxId) {
-          // Sandbox is down - trigger automatic recreation
-          console.log('[PreviewPanel] Sandbox is down, triggering automatic recreation')
+          // Sandbox is down - trigger automatic recreation (with retry limit)
+          console.log('[PreviewPanel] Sandbox is down, checking if recreation should be attempted')
 
-          // Only trigger recreation once (not on every health check)
-          if (!isRecreatingSandbox && projectId && userId) {
+          // Only trigger if not already recreating AND haven't exceeded max retries
+          if (!isRecreatingSandboxRef.current && projectId && userId && recreationAttemptsRef.current < maxRecreationRetries) {
             handleRecreateSandbox()
+          } else if (recreationAttemptsRef.current >= maxRecreationRetries) {
+            console.log('[PreviewPanel] Skipping recreation - max retries exceeded')
           }
         } else if (isAlive) {
           setIsSandboxInitializing(false)
+          // Sandbox came back - reset recreation state
+          if (recreationAttemptsRef.current > 0) {
+            recreationAttemptsRef.current = 0
+            setRecreationFailed(false)
+          }
 
           // 2. Check Expo server if we have ngrokUrl
           const ngrokUrl = (result as any)?.ngrokUrl
@@ -568,7 +604,9 @@ export function PreviewPanel({
         abortController.abort()
       }
     }
-  }, [actualPreviewUrl, sandboxId, result, projectId, userId, isRestartingServer, isServerDown, isRecreatingSandbox])
+    // Note: isRecreatingSandbox intentionally excluded - using ref instead to prevent
+    // the effect from re-triggering (which was causing an infinite retry loop)
+  }, [actualPreviewUrl, sandboxId, result, projectId, userId, isRestartingServer, isServerDown])
 
   const testToast = () => {
     toast.success('Sonner is working!', {
@@ -791,6 +829,41 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
                     ? 'Setting up the sandbox environment...'
                     : 'This may take a minute or two...'}
                 </p>
+              </div>
+            </div>
+          )}
+          {/* Recreation failed overlay - shown when max retries exhausted */}
+          {recreationFailed && !isLoading && (
+            <div className="absolute inset-0 z-50 h-full flex min-w-full items-center justify-center bg-background">
+              <div className="text-center max-w-md px-4">
+                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                  <RefreshCw className="h-6 w-6 text-destructive" />
+                </div>
+                <p className="text-lg font-medium mb-2">Sandbox Unavailable</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Failed to recreate the sandbox after {maxRecreationRetries} attempts.
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      recreationAttemptsRef.current = 0
+                      setRecreationFailed(false)
+                      handleRecreateSandbox()
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Try Again
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => window.location.reload()}
+                  >
+                    Refresh Page
+                  </Button>
+                </div>
               </div>
             </div>
           )}
