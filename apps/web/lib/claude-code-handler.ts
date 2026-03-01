@@ -6,6 +6,8 @@ import { Sandbox } from '@e2b/code-interpreter'
 import { eq, and } from 'drizzle-orm'
 import { getSkillTemplate, getSkillFilePath } from '@/lib/skills/templates'
 import { validateSkillIds } from '@/lib/skills'
+import { isLocalCLIMode } from '@/lib/providers/factory'
+import { handleLocalCLIGeneration } from '@/lib/providers/local-cli-handler'
 
 export interface ClaudeCodeHandlerRequest {
   userMessage: string
@@ -31,13 +33,22 @@ export interface ClaudeCodeStreamCallbacks {
 }
 
 /**
- * Handles Claude Code generation by directly invoking the service
- * This avoids intermediate fetch() calls and their timeout issues
+ * Handles Claude Code generation by directly invoking the service.
+ * This avoids intermediate fetch() calls and their timeout issues.
+ *
+ * Routes to one of two implementations based on CLAUDE_PROVIDER env var:
+ *   - "sandboxed" (default): E2B cloud sandbox + Claude Agent SDK
+ *   - "local-cli": locally-installed claude CLI subprocess, no sandbox
  */
 export async function handleClaudeCodeGeneration(
   request: ClaudeCodeHandlerRequest,
   callbacks: ClaudeCodeStreamCallbacks
 ): Promise<void> {
+  // Route to the local-cli handler when CLAUDE_PROVIDER=local-cli
+  if (isLocalCLIMode()) {
+    console.log('[Claude Code Handler] Routing to local-cli provider (CLAUDE_PROVIDER=local-cli)')
+    return handleLocalCLIGeneration(request, callbacks)
+  }
   console.log('[Claude Code Handler] Called with:', {
     projectId: request.projectId,
     userID: request.userID,
