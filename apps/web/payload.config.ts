@@ -14,6 +14,10 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  routes: {
+    admin: '/blog-admin',
+    api: '/blog-api',
+  },
   admin: {
     user: Users.slug,
     importMap: {
