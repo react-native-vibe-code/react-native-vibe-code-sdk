@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { headers } from 'next/headers'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth/index'
 
 export async function GET() {
   // Check if user is logged in

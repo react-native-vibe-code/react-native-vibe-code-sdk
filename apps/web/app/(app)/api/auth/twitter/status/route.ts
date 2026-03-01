@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth/index'
 import { db } from '@/lib/db'
 import { twitterLinks } from '@react-native-vibe-code/database'
 import { eq } from 'drizzle-orm'
