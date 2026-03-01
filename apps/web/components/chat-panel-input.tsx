@@ -543,9 +543,12 @@ export const ChatPanelInput = memo(function ChatPanelInput({
                 <div className="font-medium text-blue-800 dark:text-blue-200">
                   Selected: {latestSelection.tagName}
                 </div>
-                {/* <div className="text-blue-600 dark:text-blue-400 text-xs">
-                  {getFileEditionRef()}
-                </div> */}
+                {getFileEditionRef() && (
+                  <div className="text-blue-600 dark:text-blue-400 text-xs font-mono">
+                    {getFileEditionRef()?.substring(0,40)}
+                    ...
+                  </div>
+                )}
               </div>
             </div>
             <Button
@@ -557,11 +560,11 @@ export const ChatPanelInput = memo(function ChatPanelInput({
               <X className="h-3 w-3" />
             </Button>
           </div>
-          {latestSelection.className && (
+          {/* {latestSelection.className && (
             <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
               Classes: {latestSelection.className}
             </div>
-          )}
+          )} */}
         </div>
       )}
 

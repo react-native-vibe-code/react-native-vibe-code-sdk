@@ -69,8 +69,38 @@ export class ClaudeCodeService {
       // Build the user message with context and skill testing instructions
       let fullMessage = request.userMessage
       fullMessage += '\n\nCurrent working directory: /home/user'
-      if (request.selectionData?.elementId) {
-        fullMessage += `\nSelected element: ${request.selectionData.elementId}`
+
+      // Include visual edit selection context if user selected an element
+      if (request.selectionData) {
+        const sel = request.selectionData
+        fullMessage += '\n\n--- VISUAL EDIT SELECTION ---'
+        if (sel.elementId && sel.elementId !== 'No ID') {
+          // elementId format: ComponentName:extension:line:column:nestingLevel
+          fullMessage += `\nElement ID (file reference): ${sel.elementId}`
+        }
+        if (request.fileEdition) {
+          fullMessage += `\nFile to edit: ${request.fileEdition}`
+        }
+        if (sel.tagName) {
+          fullMessage += `\nElement type: <${sel.tagName}>`
+        }
+        if (sel.content && sel.content !== 'No content') {
+          fullMessage += `\nElement content: "${sel.content}"`
+        }
+        if (sel.className && sel.className !== 'No class') {
+          fullMessage += `\nCSS classes: ${sel.className}`
+        }
+        if (sel.dataAt) {
+          fullMessage += `\nSource location (data-at): ${sel.dataAt}`
+        }
+        if (sel.dataIn) {
+          fullMessage += `\nComponent (data-in): ${sel.dataIn}`
+        }
+        if (sel.path) {
+          fullMessage += `\nDOM path: ${sel.path}`
+        }
+        fullMessage += '\n\nThe user selected this element visually. Make changes to this specific element in the referenced file and location above.'
+        fullMessage += '\n--- END VISUAL EDIT SELECTION ---'
       }
 
       // If skills are selected, append testing instructions to the prompt

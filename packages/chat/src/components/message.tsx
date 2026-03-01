@@ -245,6 +245,12 @@ const PureChatMessage = ({
                       {editData.elementType}
                     </span>
                   </div>
+                  {editData.elementId && editData.elementId !== 'No ID' && (
+                    <div className="text-xs text-blue-600 dark:text-blue-400 border-l-2 border-blue-300 dark:border-blue-700 pl-2">
+                      <span className="font-medium">File ref: </span>
+                      <span className="font-mono">{editData.elementId}</span>
+                    </div>
+                  )}
                   {editData.content && (
                     <div className="text-xs text-blue-600 dark:text-blue-400 border-l-2 border-blue-300 dark:border-blue-700 pl-2">
                       <span className="font-medium">Content: </span>
