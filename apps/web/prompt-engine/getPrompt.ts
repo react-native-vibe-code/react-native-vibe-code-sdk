@@ -198,7 +198,7 @@ IMPORTANT: Auth does NOT propagate to scheduled jobs - use internal functions.
 </convex_guidelines>
 `;
 
-const prodUrl = process.env.NEXT_PUBLIC_PROD_URL || 'https://capsulethis.com'
+const prodUrl = process.env.NEXT_PUBLIC_PROD_URL || 'https://reactnativevibecode.com'
 
 export const prompt = `
 <system>

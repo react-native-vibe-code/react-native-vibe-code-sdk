@@ -62,7 +62,7 @@ Classification rules:
 
 2. A REGULAR MENTION (not an app request) typically:
    - Is just saying hello or asking a general question
-   - Is asking about Capsule's features or pricing
+   - Is asking about the platform's features or pricing
    - Is providing feedback or reporting issues
    - Is thanking or commenting without an app request
    - Is spam or unrelated content

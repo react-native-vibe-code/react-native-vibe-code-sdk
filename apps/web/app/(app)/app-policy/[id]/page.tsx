@@ -78,7 +78,7 @@ export default async function PublicPolicyPage({ params }: Props) {
           <p className="text-sm text-gray-400">
             Generated with{' '}
             <a
-              href="https://capsulethis.com/privacy-policy-generator"
+              href="https://reactnativevibecode.com/privacy-policy-generator"
               target="_blank"
               rel="noopener noreferrer"
               className="text-purple-600 hover:text-purple-700"

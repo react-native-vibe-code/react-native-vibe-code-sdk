@@ -9,8 +9,8 @@
  * Allowed origins for CORS requests
  */
 const ALLOWED_ORIGINS = [
-  'https://capsulethis.com',
-  'https://www.capsulethis.com',
+  'https://reactnativevibecode.com',
+  'https://www.reactnativevibecode.com',
   'https://capsule-ide.vercel.app',
   'http://localhost:3000',
   'http://localhost:3210',

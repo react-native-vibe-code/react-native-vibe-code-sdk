@@ -13,7 +13,7 @@ function getResend() {
   return _resend
 }
 
-const FROM_EMAIL = 'Capsule <welcome@capsulethis.com>'
+const FROM_EMAIL = 'Capsule <welcome@reactnativevibecode.com>'
 
 export async function sendWelcomeEmail(user: { name: string; email: string }) {
   console.log('[Email] Sending welcome email to:', user.email)

@@ -334,7 +334,7 @@ export async function POST(req: NextRequest) {
             // Set API Base URL for the sandbox app
             try {
               const { updateSandboxEnvFile } = await import('@/lib/convex/sandbox-utils')
-              const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.capsulethis.com'
+              const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.reactnativevibecode.com'
               await updateSandboxEnvFile(sandbox, 'EXPO_PUBLIC_API_BASE_URL', apiBaseUrl)
               console.log(`[Create Container] Set EXPO_PUBLIC_API_BASE_URL to ${apiBaseUrl}`)
             } catch (error) {
@@ -498,7 +498,7 @@ export async function POST(req: NextRequest) {
     // Set API Base URL for the sandbox app
     try {
       const { updateSandboxEnvFile } = await import('@/lib/convex/sandbox-utils')
-      const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.capsulethis.com'
+      const apiBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.reactnativevibecode.com'
       await updateSandboxEnvFile(sandbox, 'EXPO_PUBLIC_API_BASE_URL', apiBaseUrl)
       console.log(`[Create Container] Set EXPO_PUBLIC_API_BASE_URL to ${apiBaseUrl}`)
     } catch (error) {

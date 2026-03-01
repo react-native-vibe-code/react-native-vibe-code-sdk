@@ -15,7 +15,7 @@ const octokit = new Octokit({
 })
 
 const githubService = new GitHubService({
-  owner: process.env.GITHUB_OWNER || 'capsule-this',
+  owner: process.env.GITHUB_OWNER || 'react-native-vibe-code',
   token: process.env.GITHUB_TOKEN!,
 })
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     console.log(`[X-Bot Create Project] Created project: ${projectId}`)
 
     // Create GitHub repository
-    const owner = process.env.GITHUB_OWNER || 'capsule-this'
+    const owner = process.env.GITHUB_OWNER || 'react-native-vibe-code'
     try {
       await octokit.repos.get({ owner, repo: repositoryName })
       console.log(`[X-Bot Create Project] GitHub repo already exists`)

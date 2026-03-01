@@ -30,7 +30,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
           <Text style={text}>Hi {firstName},</Text>
 
           <Text style={text}>
-            You're in! <Link target='_blank' href="https://capsulethis.com" style={link}>Capsule</Link> lets you vibe code ideas into mobile and web apps.
+            You're in! <Link target='_blank' href="https://reactnativevibecode.com" style={link}>Capsule</Link> lets you vibe code ideas into mobile and web apps.
             Just prompt with text or voice and we'll handle the code for you.
           </Text>
 
@@ -80,7 +80,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
           </Section>
 
           <Section style={buttonSection}>
-            <Button style={button} href="https://www.capsulethis.com">
+            <Button style={button} href="https://www.reactnativevibecode.com">
               Start Building
             </Button>
           </Section>
@@ -89,13 +89,13 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
 
           <Text style={footer}>
             Need help?{' '}
-            <Link href="mailto:contact@capsulethis.com" style={link}>
+            <Link href="mailto:contact@reactnativevibecode.com" style={link}>
               Contact us
             </Link>
           </Text>
 
           <Text style={footer}>
-          <Link target='_blank' href="https://capsulethis.com" style={link}>Capsule</Link> - Text to mobile & web apps in seconds
+          <Link target='_blank' href="https://reactnativevibecode.com" style={link}>Capsule</Link> - Text to mobile & web apps in seconds
           </Text>
         </Container>
       </Body>

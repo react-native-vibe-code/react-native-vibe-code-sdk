@@ -54,7 +54,7 @@ export interface IntegrationHandlerResult {
  * const result = await writeIntegrationsToSandbox(
  *   ['anthropic-chat', 'google-search'],
  *   {
- *     baseUrl: 'https://capsulethis.com',
+ *     baseUrl: 'https://reactnativevibecode.com',
  *     sandbox: sandboxInstance,
  *   }
  * )

@@ -9,7 +9,7 @@ Complete reference for all API endpoints in React Native Vibe Code. This include
 
 ## Base URLs
 
-- **Production:** `https://capsulethis.com`
+- **Production:** `https://reactnativevibecode.com`
 - **Development:** `http://localhost:3210`
 - **Sandbox:** `https://[sandbox-id].e2b.dev`
 
@@ -1009,7 +1009,7 @@ Endpoints are rate-limited based on:
 Toolkit endpoints support CORS with dynamic origin validation:
 
 **Allowed Origins:**
-- `https://capsulethis.com`
+- `https://reactnativevibecode.com`
 - `http://localhost:*`
 - `*.e2b.dev`
 - `*.pages.dev`
@@ -1055,7 +1055,7 @@ Toolkit endpoints support CORS with dynamic origin validation:
 
 ```typescript
 // Chat API
-const response = await fetch('https://capsulethis.com/api/chat', {
+const response = await fetch('https://reactnativevibecode.com/api/chat', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -1083,7 +1083,7 @@ import { useChat } from 'ai/react'
 
 function ChatScreen({ projectId, userId }) {
   const { messages, input, handleInputChange, handleSubmit } = useChat({
-    api: 'https://capsulethis.com/api/chat',
+    api: 'https://reactnativevibecode.com/api/chat',
     body: { projectId, userId }
   })
 
@@ -1106,7 +1106,7 @@ function ChatScreen({ projectId, userId }) {
 
 ```bash
 # Create project
-curl -X POST https://capsulethis.com/api/projects \
+curl -X POST https://reactnativevibecode.com/api/projects \
   -H "Content-Type: application/json" \
   -H "Cookie: better-auth.session_token=xxx" \
   -d '{
@@ -1115,12 +1115,12 @@ curl -X POST https://capsulethis.com/api/projects \
   }'
 
 # Transcribe audio
-curl -X POST https://capsulethis.com/api/toolkit/stt \
+curl -X POST https://reactnativevibecode.com/api/toolkit/stt \
   -F "audio=@recording.wav" \
   -F "language=en"
 
 # Generate image
-curl -X POST https://capsulethis.com/api/toolkit/images \
+curl -X POST https://reactnativevibecode.com/api/toolkit/images \
   -H "Content-Type: application/json" \
   -d '{
     "prompt": "A beautiful sunset",
@@ -1173,8 +1173,8 @@ Future versions will be prefixed: `/api/v2/...`
 
 ## Support & Resources
 
-- **Documentation:** https://docs.capsulethis.com
-- **API Status:** https://status.capsulethis.com
+- **Documentation:** https://docs.reactnativevibecode.com
+- **API Status:** https://status.reactnativevibecode.com
 - **GitHub:** https://github.com/capsule-org/capsule-ide
 - **Discord:** https://discord.gg/capsule
 

@@ -20,10 +20,10 @@ export default function SupportPage() {
             <p className="text-lg md:text-xl text-black">
               For any questions or assistance, please email us at:{' '}
               <a 
-                href="mailto:contact@capsulethis.com"
+                href="mailto:contact@reactnativevibecode.com"
                 className="text-blue-600 hover:text-blue-800 underline"
               >
-                contact@capsulethis.com
+                contact@reactnativevibecode.com
               </a>
             </p>
           </div>

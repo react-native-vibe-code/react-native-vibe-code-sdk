@@ -161,9 +161,6 @@ export const auth = betterAuth({
     // Primary domain
     'https://www.reactnativevibecode.com',
     'https://reactnativevibecode.com',
-    // Legacy domain (capsulethis.com)
-    'https://www.capsulethis.com',
-    'https://capsulethis.com',
     ...(process.env.ADDITIONAL_TRUSTED_ORIGINS ? process.env.ADDITIONAL_TRUSTED_ORIGINS.split(',') : []),
     'http://localhost:3000',
     'http://localhost:3210',

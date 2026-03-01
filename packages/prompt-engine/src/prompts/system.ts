@@ -15,7 +15,7 @@ import { appstoreSection } from "./sections/appstore";
 import { artifactInfoSection } from "./sections/artifact-info";
 import { firstMessageSection } from "./sections/first-message";
 
-const DEFAULT_PROD_URL = "https://capsulethis.com";
+const DEFAULT_PROD_URL = "https://reactnativevibecode.com";
 
 function buildSystemPrompt(config: PromptConfig = {}): string {
   const prodUrl = config.prodUrl || DEFAULT_PROD_URL;

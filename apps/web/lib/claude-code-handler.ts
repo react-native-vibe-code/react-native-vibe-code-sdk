@@ -157,7 +157,7 @@ export async function handleClaudeCodeGeneration(
         console.error('[Claude Code Handler] Valid skill IDs can be found in lib/skills/config.ts')
       }
 
-      const prodUrl = process.env.NEXT_PUBLIC_PROD_URL || 'https://capsulethis.com'
+      const prodUrl = process.env.NEXT_PUBLIC_PROD_URL || 'https://reactnativevibecode.com'
 
       for (const skillId of request.skills) {
         console.log(`[Claude Code Handler] Processing skill ID: "${skillId}"`)

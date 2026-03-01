@@ -90,7 +90,7 @@ export function SettingsClient({
       <Card>
         <CardHeader>
           <CardTitle>Account</CardTitle>
-          <CardDescription>Your Capsule account information</CardDescription>
+          <CardDescription>Your account information</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
@@ -121,7 +121,7 @@ export function SettingsClient({
             X (Twitter) Account
           </CardTitle>
           <CardDescription>
-            Link your X account to create apps by mentioning @capsulethis
+            Link your X account to create apps by mentioning @rnvibecode
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -160,7 +160,7 @@ export function SettingsClient({
               <div className="text-sm text-muted-foreground">
                 <p className="font-medium text-foreground mb-2">How it works:</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Tweet at @capsulethis with your app idea</li>
+                  <li>Tweet at @rnvibecode with your app idea</li>
                   <li>Include images for design reference (optional)</li>
                   <li>Our AI will create your app and reply with the link</li>
                 </ol>
@@ -170,7 +170,7 @@ export function SettingsClient({
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
                 Connect your X account to create mobile apps by simply tweeting at
-                @capsulethis. Share your app idea and we&apos;ll build it for you!
+                @rnvibecode. Share your app idea and we&apos;ll build it for you!
               </p>
 
               <Button onClick={handleLinkTwitter} className="w-full sm:w-auto">

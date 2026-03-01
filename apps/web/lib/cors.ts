@@ -6,9 +6,6 @@ const ALLOWED_ORIGINS = [
   // Primary domain
   'https://reactnativevibecode.com',
   'https://www.reactnativevibecode.com',
-  // Legacy domain
-  'https://capsulethis.com',
-  'https://www.capsulethis.com',
   'https://capsule-ide.vercel.app',
   'http://localhost:3000',
   'http://localhost:3210',

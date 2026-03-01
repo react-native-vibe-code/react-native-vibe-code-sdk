@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Client, auth } from 'twitter-api-sdk'
 import { db } from '@/lib/db'
 import { xBotReplies, projects } from '@react-native-vibe-code/database'
 import { eq } from 'drizzle-orm'
@@ -9,6 +10,51 @@ export const maxDuration = 300 // 5 minutes
 
 // Secret key for x-bot internal calls
 const X_BOT_SECRET = process.env.X_BOT_SECRET
+
+/**
+ * Get authenticated Twitter client for sending error replies
+ */
+async function getAuthClient(): Promise<Client> {
+  const refreshToken = process.env.TWITTER_REFRESH_TOKEN
+  if (!refreshToken) {
+    throw new Error('TWITTER_REFRESH_TOKEN environment variable is required')
+  }
+
+  const oauth2Client = new auth.OAuth2User({
+    client_id: process.env.TWITTER_CLIENT_ID as string,
+    client_secret: process.env.TWITTER_CLIENT_SECRET as string,
+    callback: 'https://reactnativevibecode.com/api/x-bot/auth/callback',
+    scopes: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
+  })
+
+  oauth2Client.token = { refresh_token: refreshToken }
+  await oauth2Client.refreshAccessToken()
+  return new Client(oauth2Client)
+}
+
+/**
+ * Send an error reply tweet when generation fails
+ */
+async function sendErrorReply(
+  tweetId: string,
+  authorUsername: string | null,
+  firstReplyTweetId: string | null
+): Promise<void> {
+  try {
+    const client = await getAuthClient()
+    const username = authorUsername || 'there'
+    const errorText = `Sorry @${username}, there was an issue creating your app. Please try again or visit reactnativevibecode.com to build it manually.`
+    const replyToId = firstReplyTweetId || tweetId
+
+    await client.tweets.createTweet({
+      text: errorText,
+      reply: { in_reply_to_tweet_id: replyToId },
+    })
+    console.log(`[X-Bot Generate] Error reply sent for tweet ${tweetId}`)
+  } catch (replyError) {
+    console.error(`[X-Bot Generate] Failed to send error reply:`, replyError)
+  }
+}
 
 interface GenerateRequest {
   projectId: string
@@ -109,10 +155,24 @@ export async function POST(request: NextRequest) {
           await db
             .update(xBotReplies)
             .set({
+              status: 'failed',
               generationStatus: 'failed',
               errorMessage: error,
             })
             .where(eq(xBotReplies.tweetId, tweetId))
+
+          // Send error reply tweet
+          const record = await db
+            .select()
+            .from(xBotReplies)
+            .where(eq(xBotReplies.tweetId, tweetId))
+            .limit(1)
+
+          await sendErrorReply(
+            tweetId,
+            record[0]?.authorUsername || null,
+            record[0]?.firstReplyTweetId || null
+          )
         },
       }
     )
@@ -133,10 +193,24 @@ export async function POST(request: NextRequest) {
     await db
       .update(xBotReplies)
       .set({
+        status: 'failed',
         generationStatus: 'failed',
         errorMessage: error.message || 'Unexpected error',
       })
       .where(eq(xBotReplies.tweetId, tweetId))
+
+    // Send error reply tweet
+    const record = await db
+      .select()
+      .from(xBotReplies)
+      .where(eq(xBotReplies.tweetId, tweetId))
+      .limit(1)
+
+    await sendErrorReply(
+      tweetId,
+      record[0]?.authorUsername || null,
+      record[0]?.firstReplyTweetId || null
+    )
 
     return NextResponse.json(
       { error: error.message || 'Generation failed' },

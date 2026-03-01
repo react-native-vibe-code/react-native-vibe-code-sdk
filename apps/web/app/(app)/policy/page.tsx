@@ -133,8 +133,8 @@ export default function PrivacyPolicyPage() {
                 </p>
                 <p className="mt-2">
                   <strong>Email:</strong>{' '}
-                  <a href="mailto:contact@capsulethis.com" className="text-blue-600 hover:text-blue-800 underline">
-                    contact@capsulethis.com
+                  <a href="mailto:contact@reactnativevibecode.com" className="text-blue-600 hover:text-blue-800 underline">
+                    contact@reactnativevibecode.com
                   </a>
                 </p>
               </section>

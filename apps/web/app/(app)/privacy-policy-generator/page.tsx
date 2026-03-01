@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GetStartedButton } from './get-started-button'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://capsulethis.com'),
+  metadataBase: new URL('https://reactnativevibecode.com'),
   title: 'Free Privacy Policy Generator for iOS Apps | App Store Compliant | Capsule',
   description: 'Generate free, App Store compliant privacy policies for your iOS apps in minutes. Covers Apple nutrition labels, GDPR, CCPA, COPPA compliance. Updated for December 2025 requirements.',
   keywords: [
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://capsulethis.com/privacy-policy-generator',
+    url: 'https://reactnativevibecode.com/privacy-policy-generator',
     siteName: 'Capsule',
     title: 'Free Privacy Policy Generator for iOS Apps | Capsule',
     description: 'Generate App Store compliant privacy policies in minutes. Covers Apple nutrition labels, GDPR, CCPA, and more. Free for indie developers.',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     creator: '@capsulethis',
   },
   alternates: {
-    canonical: 'https://capsulethis.com/privacy-policy-generator',
+    canonical: 'https://reactnativevibecode.com/privacy-policy-generator',
   },
 }
 
@@ -210,7 +210,7 @@ export default function PolicyGeneratorPage() {
                 <div className="min-w-full p-4 rounded-lg bg-muted-foreground/5 border border-muted-foreground/10">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                    <span className="hidden md:block text-sm text-muted-foreground font-mono">https://capsulethis.com/policy/7c4b6f8e1e9a</span>
+                    <span className="hidden md:block text-sm text-muted-foreground font-mono">https://reactnativevibecode.com/policy/7c4b6f8e1e9a</span>
                     <span className="md:hidden text-sm text-muted-foreground font-mono">https://cap.com/policy/7c4b6</span>
                   </div>
                 </div>

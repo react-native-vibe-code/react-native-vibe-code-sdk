@@ -306,7 +306,7 @@ For questions or issues:
 
 - **GitHub Issues:** https://github.com/capsule-org/capsule-ide/issues
 - **Discord:** https://discord.gg/capsule
-- **Email:** support@capsulethis.com
+- **Email:** support@reactnativevibecode.com
 
 ## License
 

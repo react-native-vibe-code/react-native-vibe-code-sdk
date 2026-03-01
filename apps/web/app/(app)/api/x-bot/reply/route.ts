@@ -25,7 +25,7 @@ async function getAuthClient(): Promise<Client> {
   const oauth2Client = new auth.OAuth2User({
     client_id: process.env.TWITTER_CLIENT_ID as string,
     client_secret: process.env.TWITTER_CLIENT_SECRET as string,
-    callback: 'http://www.capsulethis.com/api/x-bot/auth/callback',
+    callback: 'https://reactnativevibecode.com/api/x-bot/auth/callback',
     scopes: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
   })
 
@@ -35,7 +35,6 @@ async function getAuthClient(): Promise<Client> {
 
   await oauth2Client.refreshAccessToken()
 
-  // Log if token was rotated
   if (
     oauth2Client.token?.refresh_token &&
     oauth2Client.token.refresh_token !== refreshToken
@@ -47,6 +46,42 @@ async function getAuthClient(): Promise<Client> {
   }
 
   return new Client(oauth2Client)
+}
+
+/**
+ * Build the final reply text within Twitter's 280 character limit.
+ * Includes app title, brief description, edit link, and remix link.
+ */
+function buildReplyText(
+  title: string,
+  appDescription: string | null,
+  projectId: string
+): string {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || 'https://reactnativevibecode.com'
+  const editUrl = `${baseUrl}/p/${projectId}`
+  const remixUrl = `${baseUrl}/p/${projectId}/remix`
+
+  const links = `\nEdit your app: ${editUrl}\nRemix it: ${remixUrl}`
+  const header = `Your app "${title}" is ready!`
+
+  // Calculate remaining space for description
+  // 280 char limit, account for header + links + newlines
+  const fixedLength = header.length + links.length + 2 // 2 for newlines between sections
+  const maxDescLength = 280 - fixedLength
+
+  if (!appDescription || maxDescLength <= 0) {
+    const text = `${header}${links}`
+    return text.length <= 280 ? text : text.substring(0, 280)
+  }
+
+  const desc =
+    appDescription.length > maxDescLength
+      ? appDescription.substring(0, maxDescLength - 3) + '...'
+      : appDescription
+
+  const text = `${header}\n\n${desc}${links}`
+  return text.length <= 280 ? text : `${header}${links}`
 }
 
 export async function POST(request: NextRequest) {
@@ -66,7 +101,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[X-Bot Reply] Sending reply for tweet ${tweetId}, project ${projectId}`)
+    console.log(
+      `[X-Bot Reply] Sending final reply for tweet ${tweetId}, project ${projectId}`
+    )
 
     // Get project details
     const projectResults = await db
@@ -81,23 +118,36 @@ export async function POST(request: NextRequest) {
 
     const project = projectResults[0]
 
-    // Build reply text
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://capsulethis.com'
-    const projectUrl = `${baseUrl}/p/${projectId}`
+    // Get xBotReplies record to find firstReplyTweetId and appDescription
+    const replyRecord = await db
+      .select()
+      .from(xBotReplies)
+      .where(eq(xBotReplies.tweetId, tweetId))
+      .limit(1)
 
-    const replyText = `Your app "${project.title}" is ready! 🚀\n\nView and edit: ${projectUrl}`
+    // Determine which tweet to reply to for proper threading
+    // Reply to the first reply tweet to create a thread, fallback to original tweet
+    const replyToTweetId = replyRecord[0]?.firstReplyTweetId || tweetId
+
+    // Build reply text with app details
+    const appDescription = replyRecord[0]?.appDescription || null
+    const replyText = buildReplyText(
+      project.title || 'Untitled App',
+      appDescription,
+      projectId
+    )
 
     // Send reply via Twitter API
     const client = await getAuthClient()
     const response = await client.tweets.createTweet({
       text: replyText,
-      reply: { in_reply_to_tweet_id: tweetId },
+      reply: { in_reply_to_tweet_id: replyToTweetId },
     })
 
     console.log(`[X-Bot Reply] Response:`, JSON.stringify(response))
 
     if (response.data?.id) {
-      // Update xBotReplies with reply info
+      // Update xBotReplies with final reply info
       await db
         .update(xBotReplies)
         .set({
@@ -116,7 +166,9 @@ export async function POST(request: NextRequest) {
         replyText,
       })
     } else {
-      console.error(`[X-Bot Reply] No reply ID returned for tweet ${tweetId}`)
+      console.error(
+        `[X-Bot Reply] No reply ID returned for tweet ${tweetId}`
+      )
 
       await db
         .update(xBotReplies)

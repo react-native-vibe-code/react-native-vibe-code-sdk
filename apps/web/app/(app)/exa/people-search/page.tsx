@@ -7,7 +7,7 @@ import { ExaAppClient } from './exa-app-client'
 import { ExaNavHeader } from '@/components/exa-nav-header'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://capsulethis.com'),
+  metadataBase: new URL('https://reactnativevibecode.com'),
   title: 'Exa App Generator - Build People Search Apps | Capsule',
   description: 'Generate AI-powered people search applications with semantic search over 1 billion profiles. Perfect for sales, recruiting, and market research teams.',
   keywords: [
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://capsulethis.com/exa/people-search',
+    url: 'https://reactnativevibecode.com/exa/people-search',
     siteName: 'Capsule',
     title: 'Exa App Generator - Build People Search Apps | Capsule',
     description: 'Generate AI-powered people search applications with semantic search over 1 billion profiles.',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
     creator: '@capsulethis',
   },
   alternates: {
-    canonical: 'https://capsulethis.com/exa/people-search',
+    canonical: 'https://reactnativevibecode.com/exa/people-search',
   },
 }
 

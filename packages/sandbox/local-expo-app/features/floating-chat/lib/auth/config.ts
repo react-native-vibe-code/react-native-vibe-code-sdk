@@ -1,7 +1,7 @@
 // Auth configuration for Expo app
 export const AUTH_CONFIG = {
   // Base URL for the Better Auth backend
-  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.capsulethis.com',
+  baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'https://www.reactnativevibecode.com',
 
   // Google OAuth credentials
   googleClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID || '',

@@ -568,7 +568,7 @@ const storage = Platform.select({
 <using_ai>
   You can build app that use AI.
 
-  Api route to make a request to AI: https://capsulethis.com/api/toolkit/llm
+  Api route to make a request to AI: https://reactnativevibecode.com/api/toolkit/llm
   It is a POST route that accepts a JSON body with a messages array.
   It returns a JSON object: { completion: string }
   Messages are in the Vercel AI SDK format (@ai-sdk in npm), including images.
@@ -584,7 +584,7 @@ const storage = Platform.select({
   | { role: 'user'; content: string | Array<ContentPart>; }
   | { role: 'assistant'; content: string | Array<ContentPart>; };
 
-  Api route to generate images: https://capsulethis.com/api/toolkit/images
+  Api route to generate images: https://reactnativevibecode.com/api/toolkit/images
   It is a POST route that accepts a JSON body with { prompt: string, size?: string }.
   size is optional, for example "1024x1024" or "512x512".
   It returns a JSON object: { image: { base64Data: string; mimeType: string; }, size: string }
@@ -594,7 +594,7 @@ const storage = Platform.select({
   type ImageGenerateRequest = { prompt: string, size?: string }
   type ImageGenerateResponse = { image: { base64Data: string; mimeType: string; }, size: string }
 
-  Api route for speech-to-text: https://capsulethis.com/api/toolkit/stt
+  Api route for speech-to-text: https://reactnativevibecode.com/api/toolkit/stt
   - It is a POST route that accepts FormData with audio file and optional language.
   - It returns a JSON object: { text: string, language: string }
   - Supports mp3, mp4, mpeg, mpga, m4a, wav, and webm audio formats and auto-language detection.

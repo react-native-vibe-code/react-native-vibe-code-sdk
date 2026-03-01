@@ -417,8 +417,9 @@ export const twitterLinks = pgTable('twitter_links', {
 export const xBotReplies = pgTable('x_bot_replies', {
   id: uuid('id').primaryKey().defaultRandom(),
   tweetId: text('tweet_id').notNull().unique(), // The mention tweet ID we replied to
-  replyTweetId: text('reply_tweet_id'), // Our reply tweet ID
+  replyTweetId: text('reply_tweet_id'), // Our final reply tweet ID
   authorId: text('author_id'), // The author who mentioned us
+  authorUsername: text('author_username'), // Twitter @handle of the mentioning user
   tweetText: text('tweet_text'), // Original tweet text (for debugging)
   status: text('status').notNull().default('pending'), // pending, generating, replied, failed, skipped
   errorMessage: text('error_message'), // Error message if failed
@@ -428,8 +429,13 @@ export const xBotReplies = pgTable('x_bot_replies', {
   isAppRequest: boolean('is_app_request').default(false), // AI classification result
   appDescription: text('app_description'), // Extracted app description from AI classification
   generationStatus: text('generation_status'), // 'pending', 'generating', 'completed', 'failed'
-  replyContent: text('reply_content'), // What we replied with
-  repliedAt: timestamp('replied_at'), // When we sent the reply
+  // First reply ("creating your app") tracking
+  firstReplyTweetId: text('first_reply_tweet_id'), // Tweet ID of the "creating your app" reply
+  firstReplyContent: text('first_reply_content'), // Content of the first reply
+  firstRepliedAt: timestamp('first_replied_at'), // When the first reply was sent
+  // Final reply ("app is ready") tracking
+  replyContent: text('reply_content'), // What we replied with (final reply)
+  repliedAt: timestamp('replied_at'), // When we sent the final reply
   createdAt: timestamp('created_at').defaultNow(),
 })
 

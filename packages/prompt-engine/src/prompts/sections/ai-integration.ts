@@ -87,5 +87,5 @@ export function createAiIntegrationSection(prodUrl: string): PromptSection {
 }
 
 export const aiIntegrationSection = createAiIntegrationSection(
-  "https://capsulethis.com"
+  "https://reactnativevibecode.com"
 );
