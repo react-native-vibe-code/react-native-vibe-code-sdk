@@ -18,6 +18,7 @@ import { AssetsPanel } from '@/components/assets-panel'
 import { ProjectsPanel } from '@/components/projects-panel'
 import { BackendPanel } from '@/components/backend-panel'
 import { CloudSidebarPanel } from '@/components/cloud-sidebar-panel'
+import { AuthSidebarPanel } from '@/components/auth-sidebar-panel'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden"
 // ResizableHandle and ResizablePanel/Group removed - using fixed 500px width for chat panel
@@ -626,6 +627,19 @@ function ProjectPageInternal() {
   const handleCloudEnabled = useCallback(() => {
     fetchCloudStatus()
   }, [fetchCloudStatus])
+
+  const handleSetupAuth = useCallback(async (): Promise<void> => {
+    const response = await fetch('/api/setup-convex-auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Failed to setup Convex Auth')
+    }
+  }, [projectId])
 
   // Legacy compatibility
   const isDesktopMode = viewMode === 'desktop'
@@ -2460,6 +2474,7 @@ function ProjectPageInternal() {
               cloudEnabled={cloudEnabled}
               cloudDeploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={handleCloudEnabled}
+              onSetupAuth={handleSetupAuth}
             >
             <div className="flex h-full w-full">
           {/* Fixed width Chat/History panel - 500px */}
@@ -2642,6 +2657,22 @@ function ProjectPageInternal() {
               cloudEnabled={cloudEnabled}
               deploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={handleCloudEnabled}
+              onNavigateToAuth={() => setMobileSidebarPanel('auth')}
+              onClose={() => setMobileSidebarPanel(null)}
+            />
+          </SheetContent>
+        </Sheet>
+
+        <Sheet open={mobileSidebarPanel === 'auth'} onOpenChange={(open) => !open && setMobileSidebarPanel(null)}>
+          <SheetContent side="left" className="w-full sm:max-w-[400px] p-0">
+            <VisuallyHidden.Root>
+              <SheetTitle>Authentication</SheetTitle>
+            </VisuallyHidden.Root>
+            <AuthSidebarPanel
+              projectId={projectId}
+              cloudEnabled={cloudEnabled}
+              onNavigateToCloud={() => setMobileSidebarPanel('cloud')}
+              onSetupAuth={handleSetupAuth}
               onClose={() => setMobileSidebarPanel(null)}
             />
           </SheetContent>
