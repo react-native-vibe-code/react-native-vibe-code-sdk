@@ -9,6 +9,7 @@ import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { UsageTracker } from '@/lib/usage-tracking'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 
@@ -89,7 +90,7 @@ export async function POST(req: NextRequest) {
         // Connect to existing sandbox
         const targetSandboxId = sandboxId || project.sandboxId
         if (targetSandboxId) {
-          sandbox = await Sandbox.connect(targetSandboxId)
+          sandbox = await connectSandbox(targetSandboxId)
           console.log(`[Claude Code API] Using sandbox: ${sandbox.sandboxId}`)
         } else {
           return Response.json(

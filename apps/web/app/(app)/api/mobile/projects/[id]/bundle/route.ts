@@ -9,7 +9,7 @@ import { projects } from '@react-native-vibe-code/database'
 import { eq, and } from 'drizzle-orm'
 import { getAuthenticatedUserId } from '@/lib/auth/test-mode'
 import { buildStaticBundle, getLatestCommitSHA } from '@/lib/bundle-builder'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 /**
  * POST /api/mobile/projects/[id]/bundle
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     let commitId: string
 
     try {
-      const sandbox = await Sandbox.connect(project.sandboxId)
+      const sandbox = await connectSandbox(project.sandboxId)
       commitId = await getLatestCommitSHA(sandbox)
     } catch (error) {
       console.error('[Mobile API] Error getting commit SHA:', error)

@@ -1,14 +1,12 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
 import { eq } from 'drizzle-orm'
 import { globalFileWatcher } from '@/lib/sandbox-file-watcher'
 import { NextRequest } from 'next/server'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes max
-
-const sandboxTimeout = parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000')
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get('projectId')
@@ -50,7 +48,8 @@ export async function GET(request: NextRequest) {
 
         // Connect to existing sandbox
         // console.log(`🔌 [FileWatch SSE] Attempting to connect to sandbox: ${sandboxId}`)
-        const sbx = await Sandbox.connect(sandboxId)
+        const sbx = await connectSandbox(sandboxId)
+        if (!sbx) throw new Error('Sandbox expired')
         // console.log(`✅ [FileWatch SSE] Successfully connected to sandbox`)
 
         // Send sandbox connected message

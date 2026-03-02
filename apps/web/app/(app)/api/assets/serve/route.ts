@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Sandbox } from "@e2b/code-interpreter"
+import { connectSandbox } from "@/lib/sandbox-connect"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const sandbox = await Sandbox.connect(sandboxId)
+    const sandbox = await connectSandbox(sandboxId)
 
     // Read the file from sandbox
     const fileBuffer = await sandbox.files.read(path)

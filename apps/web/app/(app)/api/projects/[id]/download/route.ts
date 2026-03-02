@@ -3,6 +3,7 @@ import { projects } from '@react-native-vibe-code/database'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export async function GET(
   req: NextRequest,
@@ -63,7 +64,7 @@ export async function GET(
     let sandbox: Sandbox
     try {
       console.log('[Download API] Connecting to sandbox:', project.sandboxId)
-      sandbox = await Sandbox.connect(project.sandboxId)
+      sandbox = await connectSandbox(project.sandboxId)
       console.log('[Download API] Sandbox connected successfully')
     } catch (error) {
       console.error('[Download API] Failed to connect to sandbox:', error)

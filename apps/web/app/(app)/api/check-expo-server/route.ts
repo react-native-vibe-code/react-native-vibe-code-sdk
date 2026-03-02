@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,8 @@ export async function POST(request: Request) {
     if (sandboxId) {
       try {
         console.log('[check-expo-server] Connecting to sandbox:', sandboxId)
-        const sandbox = await Sandbox.connect(sandboxId)
+        const sandbox = await connectSandbox(sandboxId)
+        if (!sandbox) throw new Error('Sandbox expired')
 
         // Check if port 8081 is listening using netstat or ss
         // We use 'ss' (socket statistics) which is more modern and reliable

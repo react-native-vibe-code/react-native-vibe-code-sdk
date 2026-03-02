@@ -1,4 +1,4 @@
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -65,7 +65,7 @@ export async function POST(
     // Connect to the sandbox
     let sbx
     try {
-      sbx = await Sandbox.connect(sandboxId)
+      sbx = await connectSandbox(sandboxId)
       console.log('✅ [Update Executor] Connected to sandbox')
     } catch (sandboxError: any) {
       console.error('❌ [Update Executor] Failed to connect:', sandboxError)

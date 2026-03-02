@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { inngest } from '@/lib/inngest'
 import { corsHeaders, handleCorsOptions } from '@/lib/cors'
 import { addCustomDomain } from '@react-native-vibe-code/publish'
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     // If project is paused and has a sandboxId, try to connect to it
     if (project.status === 'paused' && project.sandboxId) {
       try {
-        const sandbox = await Sandbox.connect(project.sandboxId)
+        const sandbox = await connectSandbox(project.sandboxId)
         
         // Update project status
         await db

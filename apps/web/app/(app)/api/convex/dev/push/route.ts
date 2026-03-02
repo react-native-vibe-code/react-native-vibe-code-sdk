@@ -6,7 +6,7 @@ import { projects, convexProjectCredentials } from '@react-native-vibe-code/data
 import { eq, and } from 'drizzle-orm'
 import { auth } from '@/lib/auth/config'
 import { headers } from 'next/headers'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get sandbox instance
-    const sandbox = await Sandbox.connect(project.sandboxId)
+    const sandbox = await connectSandbox(project.sandboxId)
 
     // Ensure .env.local has the credentials for the client-side (EXPO_PUBLIC_ prefix for Expo apps)
     const { updateSandboxEnvFile } = await import('@/lib/convex/sandbox-utils')

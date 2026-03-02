@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { eq, and } from 'drizzle-orm'
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     // Connect to sandbox
     let sandbox: Sandbox
     try {
-      sandbox = await Sandbox.connect(sandboxId)
+      sandbox = await connectSandbox(sandboxId)
     } catch (error) {
       console.error('[ngrok-backup-server] Failed to connect to sandbox:', error)
       return NextResponse.json<BackupServerResponse>(

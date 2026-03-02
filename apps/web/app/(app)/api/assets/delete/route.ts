@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Sandbox } from "@e2b/code-interpreter"
+import { connectSandbox } from "@/lib/sandbox-connect"
 import { auth } from "@/lib/auth/config"
 import { headers } from "next/headers"
 import { del } from "@vercel/blob"
@@ -32,7 +32,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Connect to sandbox
-    const sandbox = await Sandbox.connect(sandboxId)
+    const sandbox = await connectSandbox(sandboxId)
 
     // Read manifest to get blob URL
     const manifestPath = "/home/user/app/assets/manifest.json"

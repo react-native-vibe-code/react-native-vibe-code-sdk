@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { eq } from 'drizzle-orm'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -84,7 +84,7 @@ export async function GET(
     console.log('🔌 [Upgrade Dot App] Connecting to sandbox:', sandboxId)
     let sbx
     try {
-      sbx = await Sandbox.connect(sandboxId)
+      sbx = await connectSandbox(sandboxId)
       console.log('✅ [Upgrade Dot App] Successfully connected to sandbox')
     } catch (sandboxError: any) {
       console.log('❌ [Upgrade Dot App] Failed to connect to sandbox:', sandboxError)

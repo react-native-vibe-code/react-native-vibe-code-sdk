@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { startExpoServer } from '@/lib/server-utils'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Try to connect to the existing sandbox
     try {
-      sandbox = await Sandbox.connect(project.sandboxId)
+      sandbox = await connectSandbox(project.sandboxId)
       console.log(`Connected to sandbox: ${sandbox.sandboxId}`)
     } catch (error) {
       console.log(`Failed to resume sandbox ${project.sandboxId}:`, error)

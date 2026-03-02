@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 interface CheckNgrokHealthRequest {
   ngrokUrl: string
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     if (tunnelStatus === 'disconnected') {
       try {
         console.log('[check-ngrok-health] Checking if server is still running in sandbox...')
-        const sandbox = await Sandbox.connect(sandboxId)
+        const sandbox = await connectSandbox(sandboxId)
 
         // Check if the port is listening
         const checkPortCmd = `ss -tuln 2>/dev/null | grep -q :${checkPort} && echo "LISTENING" || echo "NOT_LISTENING"`

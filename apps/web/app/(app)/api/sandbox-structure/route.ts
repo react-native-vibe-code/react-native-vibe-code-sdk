@@ -1,11 +1,9 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
 import { eq } from 'drizzle-orm'
 import { globalFileWatcher } from '@/lib/sandbox-file-watcher'
 import { globalFileChangeStream } from '@/lib/file-change-stream'
-
-const sandboxTimeout = parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000') // Use env var, default to 1 hour
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export const maxDuration = 120
 
@@ -86,7 +84,7 @@ export async function POST(req: Request) {
     // Connect to existing sandbox
     let sbx
     try {
-      sbx = await Sandbox.connect(sandboxId)
+      sbx = await connectSandbox(sandboxId)
       // console.log('✅ [Sandbox Structure] Successfully connected to sandbox')
 
       // File watcher is now handled by dedicated /api/file-watch endpoint

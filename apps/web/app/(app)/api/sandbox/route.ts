@@ -3,6 +3,7 @@ import { projects } from '@react-native-vibe-code/database'
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { eq, and } from 'drizzle-orm'
 import { globalFileWatcher } from '@/lib/sandbox-file-watcher'
 import { globalFileChangeStream } from '@/lib/file-change-stream'
@@ -148,13 +149,13 @@ export async function POST(req: Request) {
         // Try to connect to the existing sandbox
         if (project.sandboxId) {
           try {
-            sbx = await Sandbox.connect(project.sandboxId)
+            sbx = await connectSandbox(project.sandboxId)
             console.log(`Connected to sandbox: ${sbx.sandboxId}`)
           } catch (error) {
             console.log(`Failed to connect to sandbox ${project.sandboxId}:`, error)
             // Try to connect to existing sandbox instead
             try {
-              sbx = await Sandbox.connect(project.sandboxId)
+              sbx = await connectSandbox(project.sandboxId)
               console.log(`Connected to existing sandbox: ${sbx.sandboxId}`)
             } catch (connectError) {
               console.log(

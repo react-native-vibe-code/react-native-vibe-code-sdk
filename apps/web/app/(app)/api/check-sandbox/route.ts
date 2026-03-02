@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export async function POST(request: Request) {
   try {
@@ -12,13 +12,20 @@ export async function POST(request: Request) {
     console.log('[check-sandbox] Checking sandbox container:', sandboxId)
 
     // Check if the sandbox container is alive using E2B SDK
+    // enforceMaxLifetime: true ensures sandboxes are killed after the configured max duration,
+    // preventing health check polling from keeping sandboxes alive indefinitely
     try {
-      const sandbox = await Sandbox.connect(sandboxId)
+      const sandbox = await connectSandbox(sandboxId, { enforceMaxLifetime: true })
+
+      if (!sandbox) {
+        console.log('[check-sandbox] Sandbox exceeded max lifetime:', sandboxId)
+        return NextResponse.json({
+          isAlive: false,
+          reason: 'Sandbox exceeded maximum lifetime'
+        })
+      }
 
       console.log('[check-sandbox] Sandbox container is alive:', sandboxId)
-
-      // Note: E2B Sandbox doesn't need explicit closing for resume operations
-      // The sandbox will remain active and timeout according to E2B's policies
 
       return NextResponse.json({ isAlive: true })
     } catch (error) {

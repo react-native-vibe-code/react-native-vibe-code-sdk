@@ -3,7 +3,7 @@
  * This replaces the EAS deployment for web builds
  */
 
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { customAlphabet } from 'nanoid'
 import { addCustomDomain, verifyCustomDomain } from './cloudflare-custom-domain'
 
@@ -72,7 +72,7 @@ export async function deployToCloudflare(
     console.log(`[Cloudflare Deploy] About to connect to sandbox...`)
 
     // Connect to the sandbox
-    const sandbox = await Sandbox.connect(sandboxId)
+    const sandbox = await connectSandbox(sandboxId)
     console.log(`[Cloudflare Deploy] Successfully connected to sandbox: ${sandbox.sandboxId}`)
 
     // Step 1: Build the web app

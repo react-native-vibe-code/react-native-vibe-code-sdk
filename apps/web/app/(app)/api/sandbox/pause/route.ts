@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { eq, and } from 'drizzle-orm'
 
 export async function POST(req: Request) {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     }
 
     // Connect to the sandbox and pause it
-    const sbx = await Sandbox.connect(project.sandboxId)
+    const sbx = await connectSandbox(project.sandboxId)
     const pausedSandboxId = await sbx.pause()
 
     // Update project status to paused and server status to closed

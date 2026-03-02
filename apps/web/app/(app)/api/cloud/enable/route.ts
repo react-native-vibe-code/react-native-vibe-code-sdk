@@ -8,6 +8,7 @@ import { eq, and } from 'drizzle-orm'
 import { auth } from '@/lib/auth/config'
 import { headers } from 'next/headers'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { pusherServer } from '@/lib/pusher'
 import { provisionManagedConvexProject } from '@/lib/convex/management-api'
 import { updateSandboxEnvFile } from '@/lib/convex/sandbox-utils'
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
 
     // Connect to sandbox
     console.log('[Cloud Enable] Connecting to sandbox:', project.sandboxId)
-    const sandbox = await Sandbox.connect(project.sandboxId)
+    const sandbox = await connectSandbox(project.sandboxId)
 
     // Step 1: Create the convex folder and write template files
     console.log('[Cloud Enable] Creating convex folder and writing template files...')

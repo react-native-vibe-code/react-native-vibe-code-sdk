@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 
 export const maxDuration = 300 // 5 minutes for build process
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Connect to the sandbox
-    const sbx = await Sandbox.connect(sandboxId)
+    const sbx = await connectSandbox(sandboxId)
 
     try {
       // Navigate to the app directory

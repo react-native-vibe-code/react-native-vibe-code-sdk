@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox, sandboxTimeout } from '@/lib/sandbox-connect'
 import { eq, and } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 
@@ -63,7 +63,15 @@ export async function POST(req: NextRequest) {
 
     // Try to get sandbox info
     try {
-      const sandbox = await Sandbox.connect(project.sandboxId)
+      const sandbox = await connectSandbox(project.sandboxId, { enforceMaxLifetime: true })
+
+      if (!sandbox) {
+        return Response.json({
+          isRunning: false,
+          needsResume: true,
+          error: 'Sandbox exceeded maximum lifetime',
+        })
+      }
 
       const info = await sandbox.getInfo()
 

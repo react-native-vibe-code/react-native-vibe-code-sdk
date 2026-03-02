@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Sandbox } from "@e2b/code-interpreter"
+import { connectSandbox } from "@/lib/sandbox-connect"
 import { auth } from "@/lib/auth/config"
 import { headers } from "next/headers"
 import { put } from "@vercel/blob"
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Connect to sandbox
-    const sandbox = await Sandbox.connect(sandboxId)
+    const sandbox = await connectSandbox(sandboxId)
 
     // Determine target directory
     const targetDir = fileType === "image"

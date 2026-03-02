@@ -1,5 +1,5 @@
 // THIS FILE SHOULD NEVER BE EDITED, THE PORT, THE EXPO SERVER RUNNING ALL OF IT IS NECESARY
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     console.log('[Test Expo] Connecting to sandbox:', sandboxId)
     let sandbox
     try {
-      sandbox = await Sandbox.connect(sandboxId)
+      sandbox = await connectSandbox(sandboxId)
       console.log('[Test Expo] Connected to sandbox:', sandbox.sandboxId)
     } catch (connectError) {
       console.error('[Test Expo] Failed to connect to sandbox:', connectError)

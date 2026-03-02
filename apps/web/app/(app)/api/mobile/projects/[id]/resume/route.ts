@@ -8,7 +8,7 @@ import { db } from '@/lib/db'
 import { projects } from '@react-native-vibe-code/database'
 import { eq, and } from 'drizzle-orm'
 import { getAuthenticatedUserId } from '@/lib/auth/test-mode'
-import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { restoreConvexEnvToSandbox } from '@/lib/convex/sandbox-utils'
 
 /**
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, props: { params: Promise<{ id: stri
     }
 
     // Connect to sandbox
-    const sandbox = await Sandbox.connect(project.sandboxId)
+    const sandbox = await connectSandbox(project.sandboxId)
 
     // Restore Convex environment variables from database
     await restoreConvexEnvToSandbox(sandbox, project.id)

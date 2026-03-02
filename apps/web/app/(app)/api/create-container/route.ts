@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { projects, convexProjectCredentials } from '@react-native-vibe-code/database'
 import { Sandbox } from '@e2b/code-interpreter'
+import { connectSandbox } from '@/lib/sandbox-connect'
 import { Octokit } from '@octokit/rest'
 import { GitHubService } from '@/lib/github-service'
 import { eq, and } from 'drizzle-orm'
@@ -328,7 +329,7 @@ export async function POST(req: NextRequest) {
         // Try to connect to the existing sandbox
         if (project.sandboxId) {
           try {
-            sandbox = await Sandbox.connect(project.sandboxId)
+            sandbox = await connectSandbox(project.sandboxId)
             console.log(`Connected to existing sandbox: ${sandbox.sandboxId}`)
 
             // Set API Base URL for the sandbox app
