@@ -1,36 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client, auth } from 'twitter-api-sdk'
 import { db } from '@/lib/db'
 import { xBotReplies, projects } from '@react-native-vibe-code/database'
 import { eq } from 'drizzle-orm'
 import { handleClaudeCodeGeneration } from '@/lib/claude-code-handler'
 import { blobUrlsToBase64 } from '@/lib/x-bot/extract-images'
+import { getAuthClient } from '@/lib/x-bot/process-mention'
 
 export const maxDuration = 300 // 5 minutes
 
 // Secret key for x-bot internal calls
 const X_BOT_SECRET = process.env.X_BOT_SECRET
-
-/**
- * Get authenticated Twitter client for sending error replies
- */
-async function getAuthClient(): Promise<Client> {
-  const refreshToken = process.env.TWITTER_REFRESH_TOKEN
-  if (!refreshToken) {
-    throw new Error('TWITTER_REFRESH_TOKEN environment variable is required')
-  }
-
-  const oauth2Client = new auth.OAuth2User({
-    client_id: process.env.TWITTER_CLIENT_ID as string,
-    client_secret: process.env.TWITTER_CLIENT_SECRET as string,
-    callback: 'https://reactnativevibecode.com/api/x-bot/auth/callback',
-    scopes: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
-  })
-
-  oauth2Client.token = { refresh_token: refreshToken }
-  await oauth2Client.refreshAccessToken()
-  return new Client(oauth2Client)
-}
 
 /**
  * Send an error reply tweet when generation fails
