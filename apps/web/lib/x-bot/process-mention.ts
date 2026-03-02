@@ -363,7 +363,7 @@ export async function processMention(
     status: 'pending',
     imageUrls,
     isAppRequest: true,
-    appDescription: classification.appDescription,
+    appDescription: classificationResult.appDescription,
     generationStatus: 'pending',
     firstReplyTweetId,
     firstReplyContent: firstReplyText,
