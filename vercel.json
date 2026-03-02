@@ -2,7 +2,6 @@
   "buildCommand": "pnpm turbo run build --filter=@react-native-vibe-code/web --force",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "_comment_outputDirectory": "DO NOT add outputDirectory here. Vercel auto-detects the Next.js app in apps/web/ and resolves outputDirectory relative to it, which causes double paths like apps/web/apps/web/.next",
   "crons": [
     {
       "path": "/api/x-bot/poll",
