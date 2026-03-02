@@ -2,7 +2,7 @@
   "buildCommand": "pnpm turbo run build --filter=@react-native-vibe-code/web --force",
   "installCommand": "pnpm install",
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "crons": [
     {
       "path": "/api/x-bot/poll",
