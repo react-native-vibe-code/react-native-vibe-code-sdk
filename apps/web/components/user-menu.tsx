@@ -104,7 +104,7 @@ export function UserMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() =>
-          window.open("https://x.com/capsulethis", "_blank")
+          window.open("https://x.com/rnvibecode", "_blank")
         }>
           <TwitterLogoIcon className="mr-2 h-4 w-4 text-muted-foreground" />
           Follow us on X
