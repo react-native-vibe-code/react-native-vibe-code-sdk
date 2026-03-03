@@ -77,6 +77,16 @@ export function ChatInput({
   const [selectedSkills, setSelectedSkills] = useState<AISkill[]>([])
   const [editorWidth, setEditorWidth] = useState<number>(0)
 
+  // Sync external input changes (e.g. from query params) into the TipTap editor
+  useEffect(() => {
+    if (input && editorRef.current) {
+      const currentText = editorRef.current.getPlainText?.() || ''
+      if (!currentText.trim() && input.trim()) {
+        editorRef.current.setContent(input)
+      }
+    }
+  }, [input])
+
   // Audio recorder for Whisper transcription
   const audioRecorder = useAudioRecorder()
 

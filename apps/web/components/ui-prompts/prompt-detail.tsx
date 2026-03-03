@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, ArrowRight, Eye } from "lucide-react"
+import { ArrowRight, Eye, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ScreenshotGallery } from "@/components/ui-prompts/screenshot-gallery"
 import { PromptCodeBlock } from "@/components/ui-prompts/prompt-code-block"
@@ -100,7 +100,7 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
           <div className="flex items-start gap-3">
             <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
             {prompt.featured && (
-              <Badge className="bg-green-600 text-white border-green-500 hover:bg-green-600 flex-shrink-0">
+              <Badge className="bg-foreground text-background border-foreground/80 hover:bg-foreground flex-shrink-0">
                 Featured
               </Badge>
             )}
@@ -141,11 +141,22 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
               href={prompt.remixUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium py-3 px-4 transition-colors"
+              className="flex items-center justify-center gap-2 w-full rounded-xl bg-foreground hover:bg-foreground/80 text-background font-medium py-3 px-4 transition-colors"
             >
               <span>Try this design now: remix codebase</span>
               <ArrowRight className="h-4 w-4" />
             </a>
+          )}
+
+          {/* Start new app with this prompt */}
+          {prompt.prompt && (
+            <Link
+              href={`/?ui-prompt=${encodeURIComponent(prompt.prompt)}`}
+              className="flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-card hover:bg-accent text-foreground font-medium py-3 px-4 transition-colors"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Start new app with this prompt</span>
+            </Link>
           )}
         </div>
       </div>

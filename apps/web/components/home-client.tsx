@@ -58,6 +58,18 @@ export function HomeClient({ initialSession }: HomeClientProps) {
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const { selectedModel, setSelectedModel } = useClaudeModel()
 
+  // Handle ui-prompt query param to pre-fill chat input
+  useEffect(() => {
+    const uiPrompt = searchParams?.get('ui-prompt')
+    if (uiPrompt) {
+      setChatInput(uiPrompt)
+      // Clean up the query param from URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete('ui-prompt')
+      window.history.replaceState({}, document.title, url.pathname + url.search)
+    }
+  }, [searchParams, setChatInput])
+
   // Handle checkout success/cancel
   useEffect(() => {
     const checkoutStatus = searchParams?.get('checkout')
