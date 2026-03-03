@@ -95,9 +95,9 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
         </div>
 
         {/* Right: Details */}
-        <div className="lg:w-[40%] space-y-6">
+        <div className="lg:w-[40%] space-y-3">
           {/* Title + Featured Badge */}
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-1">
             <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
             {prompt.featured && (
               <Badge className="bg-foreground text-background border-foreground/80 hover:bg-foreground flex-shrink-0">

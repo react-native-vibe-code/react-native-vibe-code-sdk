@@ -75,6 +75,7 @@ import {
   Copy,
 } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
@@ -141,6 +142,8 @@ export function NavHeader({
     useSubscriptionStatus()
   const { resolvedTheme, setTheme, theme } = useTheme()
   const { isDevMode, setIsDevMode } = useDevMode()
+  const pathname = usePathname()
+  const logoHref = pathname?.startsWith('/ui-prompts') ? '/ui-prompts' : '/'
 
   // Handle client-side mounting
   useEffect(() => {
@@ -930,16 +933,18 @@ export function NavHeader({
     <>
       <nav className="w-full flex bg-background py-4 px-4 md:px-8 ">
         <div className="flex flex-1 items-center">
-          <img
-            src={mounted && resolvedTheme === 'dark' ? '/logo_iso_dark.svg' : '/logo_iso.svg'}
-            alt="Logo"
-            className="block sm:hidden w-[32px] h-[32px]"
-          />
-          <img
-            src={mounted && resolvedTheme === 'dark' ? '/react-native-vibe-code-long-logo-dark.svg' : '/react-native-vibe-code-long-logo.svg'}
-            alt="Logo"
-            className="hidden sm:block min-w-[500px] h-[39px] sm:w-[240px] sm:h-[58px]"
-          />
+          <Link href={logoHref}>
+            <img
+              src={mounted && resolvedTheme === 'dark' ? '/logo_iso_dark.svg' : '/logo_iso.svg'}
+              alt="Logo"
+              className="block sm:hidden w-[32px] h-[32px]"
+            />
+            <img
+              src={mounted && resolvedTheme === 'dark' ? '/react-native-vibe-code-long-logo-dark.svg' : '/react-native-vibe-code-long-logo.svg'}
+              alt="Logo"
+              className="hidden sm:block min-w-[500px] h-[39px] sm:w-[240px] sm:h-[58px]"
+            />
+          </Link>
         </div>
         <div className="flex items-center gap-1 md:gap-4">
           {/* Docs Button */}
