@@ -14,7 +14,7 @@ export default async function UiPromptsPage() {
         {/* Hero */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            UI Prompt Gallery
+            UI Prompts
           </h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Curated collection of AI prompts that generate beautiful React

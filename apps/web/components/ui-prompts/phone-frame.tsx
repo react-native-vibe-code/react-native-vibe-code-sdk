@@ -19,7 +19,7 @@ export function PhoneFrame({ src, alt, className }: PhoneFrameProps) {
       style={{ aspectRatio: "9 / 19.5" }}
     >
       {/* Dynamic Island */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[90px] h-[28px] bg-black rounded-full" />
+      <div className="hidden absolute top-3 left-1/2 -translate-x-1/2 z-20 w-[90px] h-[28px] bg-black rounded-full" />
 
       {/* Status Bar */}
       <div className="hidden absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 pt-3 pb-1">

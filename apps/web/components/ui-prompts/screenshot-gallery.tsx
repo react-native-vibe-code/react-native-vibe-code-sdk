@@ -48,7 +48,7 @@ export function ScreenshotGallery({
                 onClick={() => setActiveIndex(index)}
                 className={`flex-shrink-0 w-12 h-24 rounded-lg overflow-hidden border-2 transition-colors ${
                   index === activeIndex
-                    ? "border-green-500"
+                    ? "border-foreground"
                     : "border-border hover:border-primary/50"
                 }`}
               >

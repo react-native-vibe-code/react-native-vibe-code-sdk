@@ -30,7 +30,7 @@ export function PromptCard({
         {/* Featured Badge */}
         {featured && (
           <div className="absolute top-3 left-3 z-10">
-            <Badge className="bg-green-600 text-white border-green-500 hover:bg-green-600">
+            <Badge className="bg-foreground text-background border-foreground/80 hover:bg-foreground">
               Featured
             </Badge>
           </div>
@@ -46,7 +46,7 @@ export function PromptCard({
         </div>
 
         {/* Title */}
-        <h3 className="text-foreground font-medium truncate group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">
+        <h3 className="text-foreground font-medium truncate group-hover:text-muted-foreground transition-colors">
           {title}
         </h3>
 
