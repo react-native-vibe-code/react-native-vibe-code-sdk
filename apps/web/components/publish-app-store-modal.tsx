@@ -81,11 +81,29 @@ export function PublishAppStoreModal({
   )
   const [expoToken, setExpoToken] = useState('')
 
+  // Fetch bundle ID from sandbox app.json
+  useEffect(() => {
+    if (open && sandboxId) {
+      fetch(`/api/eas/app-config?sandboxId=${encodeURIComponent(sandboxId)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.bundleIdentifier) {
+            setBundleId(data.bundleIdentifier)
+          }
+          if (data.name && !projectName) {
+            setAppName(data.name)
+          }
+        })
+        .catch(() => {
+          // Ignore errors, user can fill manually
+        })
+    }
+  }, [open, sandboxId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Pre-fill from localStorage and projectName on mount / open
   useEffect(() => {
     if (open) {
       setAppName(projectName ?? '')
-      setBundleId('')
       setAppleEmail(storedAppleEmail)
       setApplePassword(storedApplePassword)
       setExpoToken(storedExpoToken)
