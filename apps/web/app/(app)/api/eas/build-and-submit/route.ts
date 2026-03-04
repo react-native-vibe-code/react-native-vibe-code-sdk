@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
             if (!config.expo.ios.infoPlist) config.expo.ios.infoPlist = {};
             config.expo.ios.infoPlist.ITSAppUsesNonExemptEncryption = false;
             ${appName ? `config.expo.name = ${JSON.stringify(appName)};` : ''}
+            ${appName ? `config.expo.slug = ${JSON.stringify(appName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))};` : ''}
             ${bundleId ? `config.expo.ios.bundleIdentifier = ${JSON.stringify(bundleId)};` : ''}
             fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
             console.log('app.json patched successfully');
@@ -94,6 +95,13 @@ export async function POST(request: NextRequest) {
               onStderr: (data: string) => sendEvent({ type: 'log', data }),
             }
           )
+
+          // Remove stale native project directories so EAS does a clean prebuild
+          // with the correct app name/slug as the Xcode target
+          await sbx.commands.run('rm -rf /home/user/app/ios /home/user/app/android', {
+            cwd: '/home/user/app',
+            timeoutMs: 10_000,
+          })
 
           // Phase 1: Initialize EAS project (non-interactive is fine here)
           sendEvent({

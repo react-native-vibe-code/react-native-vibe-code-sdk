@@ -1,6 +1,33 @@
 # Progress Log
 
 ## Learnings
-(Patterns discovered during implementation)
+
+### E2B sandbox stdin is NOT TTY-compatible
+- `sandbox.commands.run()` with `background: true, stdin: true` does provide a stdin handle, but the EAS CLI detects it as non-readable (`Input is required, but stdin is not readable`)
+- EAS CLI checks if stdin is a TTY before showing interactive prompts — E2B doesn't provide a real TTY
+- **Solution**: Use `--non-interactive` flag and pre-configure everything so no prompts are needed
+
+### EAS CLI interactive prompts that block builds
+1. **"iOS app only uses standard/exempt encryption?"** — Blocks build if not pre-configured
+   - Fix: Patch `app.json` to set `expo.ios.infoPlist.ITSAppUsesNonExemptEncryption = false` before running build
+2. **"Detected that your app uses Expo Go for development"** — Warning that can cause issues
+   - Fix: Set `EAS_BUILD_NO_EXPO_GO_WARNING=true` env var
+3. **"npx expo config" JSON parse error** — `[CLI DEBUG]` prefix in output breaks JSON parsing
+   - Not blocking, EAS falls back to its own config reader — can be ignored
+
+### Apple credentials with --non-interactive
+- `EXPO_APPLE_ID` and `EXPO_APPLE_PASSWORD` env vars are used by EAS CLI for Apple authentication when `--non-interactive` is set
+- 2FA is handled server-side by EAS when using `--non-interactive` — no TTY prompts needed
+- If credentials are wrong, CLI outputs "Invalid username and password combination" which we detect and send back to frontend as `credentials_failed` prompt
+
+### useEffect dependency trap with localStorage
+- The wizard reset `useEffect` originally depended on `storedAppleEmail`, `storedApplePassword`, `storedExpoToken` (from `useLocalStorage` hook)
+- When step 3 saved the expo token via `setStoredExpoToken()`, it triggered the reset effect which set `currentStep` back to 1 — wizard appeared to "do nothing"
+- Fix: Only reset on modal open transition (false → true) using a `useRef` to track previous open state, with `[open]` as sole dependency
+
+### Pre-filling bundle ID from sandbox
+- `app.json` in the sandbox at `/home/user/app/app.json` contains `expo.ios.bundleIdentifier`
+- Created `/api/eas/app-config` GET endpoint to read it and return to the frontend
+- Wizard Step 1 fetches this on modal open to pre-fill the Bundle Identifier field
 
 ---
