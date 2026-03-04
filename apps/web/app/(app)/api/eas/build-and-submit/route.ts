@@ -306,20 +306,8 @@ function handleOutput(
 
   // Auto-respond to EAS interactive prompts
   if (autoRespond) {
-    // "Do you want to log in to your Apple account? (Y/n)" → yes
-    if (lower.includes('do you want to log in') && lower.includes('apple')) {
-      autoRespond('Y')
-      return
-    }
-
-    // "Generate a new Apple Distribution Certificate?" or similar yes/no
-    if (
-      lower.includes('generate a new') ||
-      (lower.includes('(y/n)') && (
-        lower.includes('would you like') ||
-        lower.includes('do you want')
-      ))
-    ) {
+    // Any (Y/n) prompt – the capital Y means Yes is the default, safe to auto-accept
+    if (/\(Y\/n\)\s*$/.test(data.trim())) {
       autoRespond('Y')
       return
     }
