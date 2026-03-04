@@ -100,9 +100,10 @@ export function PublishAppStoreModal({
     }
   }, [open, sandboxId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Pre-fill from localStorage and projectName on mount / open
+  // Reset wizard state only when modal first opens (open transitions false → true)
+  const prevOpenRef = useRef(false)
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpenRef.current) {
       setAppName(projectName ?? '')
       setAppleEmail(storedAppleEmail)
       setApplePassword(storedApplePassword)
@@ -118,7 +119,8 @@ export function PublishAppStoreModal({
       setShow2FAMethod(false)
       setShow2FACode(false)
     }
-  }, [open, projectName, storedAppleEmail, storedApplePassword, storedExpoToken])
+    prevOpenRef.current = open
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Navigation helpers
   const goToStep = useCallback(
