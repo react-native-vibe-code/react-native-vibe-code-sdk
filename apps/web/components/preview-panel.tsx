@@ -951,11 +951,28 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
 
                 {/* QR Code Section - Prominent display */}
                 {result?.ngrokUrl && (
-                  <div className="flex flex-col items-start space-y-4 max-w-xl relative -top-8">
+                  <div className="flex flex-col items-start space-y-2 max-w-xl relative -top-8">
                     <div className="space-y-1">
-                      <h3 className="text-xl font-bold">Test on your phone</h3>
+                      <h3 className="text-xl font-bold">Test app on your phone</h3>
                     </div>
 
+                    <div className="space-y-3">
+                      <p className="text-base">
+                        <span className="font-semibold text-sm">1. Download the latest Expo Go app</span>
+                      </p>
+                      <a
+                        href="https://expo.dev/go"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                      >
+                        Download Expo Go app
+                      </a>
+                    </div>
+
+                      <p className="text-base pt-4">
+                        <span className="font-semibold text-sm">2. Scan QR Code</span>
+                      </p>
                     <div className="flex items-center justify-center p-4 bg-white rounded-xl border border-gray-200">
                       <Canvas
                         text={result.ngrokUrl?.replace('https://', 'exp://')}
@@ -970,15 +987,6 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
                           },
                         }}
                       />
-                    </div>
-
-                    <div className="space-y-3">
-                      <p className="text-base">
-                        <span className="font-semibold text-sm">1. Download the latest Expo Go app</span>
-                      </p>
-                      <p className="text-base">
-                        <span className="font-semibold text-sm">2. Scan QR Code</span>
-                      </p>
                     </div>
 
                     <div className="bg-muted/50 rounded-lg p-4 space-y-3 border border-muted max-w-[270px]">
