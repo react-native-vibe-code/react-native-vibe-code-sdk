@@ -16,6 +16,7 @@ import {
   FolderOpen,
   Database,
   Cloud,
+  KeyRound,
   Download,
   Rocket,
   ExternalLink,
@@ -136,6 +137,7 @@ export function MobileBurgerMenu({
     { id: null, label: "Chat", icon: MessageSquare },
     { id: "assets", label: "Assets", icon: Image },
     { id: "cloud", label: "Cloud", icon: Cloud },
+    { id: "auth", label: "Authentication", icon: KeyRound },
     { id: "projects", label: "Projects", icon: FolderOpen },
     { id: "backend", label: "Backend", icon: Database },
   ]

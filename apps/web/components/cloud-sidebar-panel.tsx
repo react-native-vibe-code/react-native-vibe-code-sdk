@@ -12,7 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Database, Zap, Cloud, HardDrive, CheckCircle2, Loader2, ExternalLink } from 'lucide-react'
+import { Database, Zap, Cloud, HardDrive, CheckCircle2, Loader2, ExternalLink, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface CloudSidebarPanelProps {
@@ -20,6 +20,7 @@ interface CloudSidebarPanelProps {
   cloudEnabled: boolean
   deploymentUrl?: string
   onCloudEnabled?: () => void
+  onNavigateToAuth?: () => void
   onClose: () => void
 }
 
@@ -28,6 +29,7 @@ export function CloudSidebarPanel({
   cloudEnabled,
   deploymentUrl,
   onCloudEnabled,
+  onNavigateToAuth,
   onClose,
 }: CloudSidebarPanelProps) {
   const [isEnabling, setIsEnabling] = useState(false)
@@ -116,6 +118,25 @@ export function CloudSidebarPanel({
                 <p className="text-sm text-muted-foreground">
                   Your app now has access to a real-time database. The AI will use Convex for all data persistence and backend logic.
                 </p>
+
+                <div className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Authentication</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Add email/password authentication to your app with Convex Auth.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={onNavigateToAuth}
+                  >
+                    <KeyRound className="h-3.5 w-3.5 mr-2" />
+                    Setup Authentication
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
