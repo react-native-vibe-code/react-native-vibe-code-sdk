@@ -254,6 +254,11 @@ export class ClaudeCodeService {
 
         // Use background: true to avoid E2B's internal timeout on foreground commands
         // Background mode returns a command handle that can stream output and wait for completion
+        // NOTE: We use a large explicit timeoutMs (30 min) instead of 0 because:
+        // - timeoutMs: 0 is converted to undefined by the Connect transport, sending no grpc-timeout header
+        // - Without a client-specified deadline, E2B's envd server applies its own shorter default
+        // - A large explicit value sets a server-side gRPC deadline long enough for complex agent tasks
+        const sandboxTimeoutMs = parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '1800000', 10)
         const commandHandle = await sandbox.commands.run(
           command,
           {
@@ -261,7 +266,7 @@ export class ClaudeCodeService {
             envs: {
               ANTHROPIC_API_KEY: globalThis.process.env.ANTHROPIC_API_KEY || '',
             },
-            timeoutMs: 0, // No timeout - let it run as long as needed
+            timeoutMs: sandboxTimeoutMs, // Match sandbox lifetime to avoid premature gRPC deadline
             onStdout: (data: string) => {
             stdoutChunkCount++
             receivedAnyOutput = true
@@ -453,19 +458,45 @@ export class ClaudeCodeService {
       // Handle execution failure
       // Note: With spawn() we no longer hit the 120-second timeout issue that run() had
       if (executionError) {
-        console.error('[Claude Code Service] Execution error detected:', executionError.message)
+        const isDeadlineExceeded = executionError.message.includes('deadline_exceeded') ||
+          executionError.message.includes('the operation timed out') ||
+          executionError.message.includes('timeoutMs')
+
+        console.error('[Claude Code Service] Execution error detected:', {
+          message: executionError.message,
+          isDeadlineExceeded,
+          receivedAnyOutput,
+          completionDetected,
+          stdoutChunkCount,
+        })
 
         // If we received output (content was already streamed to frontend), don't treat
-        // transient E2B errors like "[unknown] terminated" as fatal — the agent likely
-        // finished or nearly finished. Treat as success with whatever we got.
-        if (receivedAnyOutput && (completionDetected || stdoutChunkCount > 5)) {
+        // transient E2B errors like "[unknown] terminated" or deadline timeouts as fatal —
+        // the agent likely finished or nearly finished. Treat as success with whatever we got.
+        // For deadline_exceeded specifically, even a single chunk of output means the agent
+        // was working — the E2B server just terminated the gRPC stream.
+        const canRecoverFromError = receivedAnyOutput && (
+          completionDetected ||
+          stdoutChunkCount > 5 ||
+          (isDeadlineExceeded && stdoutChunkCount > 0)
+        )
+
+        if (canRecoverFromError) {
           console.log('[Claude Code Service] Execution error after receiving output — treating as completion', {
             receivedAnyOutput,
             completionDetected,
             stdoutChunkCount,
+            isDeadlineExceeded,
             error: executionError.message,
           })
           // Fall through to success path below
+        } else if (isDeadlineExceeded) {
+          // Provide a user-friendly message instead of the raw E2B SDK error
+          await callbacks.onError(
+            'The AI agent took too long to respond. This can happen with complex requests. ' +
+            'Please try again — the agent will resume from where it left off if you send the same message.'
+          )
+          return
         } else {
           await callbacks.onError(executionError.message)
           return
