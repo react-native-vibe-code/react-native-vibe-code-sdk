@@ -68,7 +68,7 @@ export class ClaudeCodeService {
 
       // Build the user message with context and skill testing instructions
       let fullMessage = request.userMessage
-      fullMessage += '\n\nCurrent working directory: /home/user'
+      fullMessage += '\n\nCurrent working directory: /home/user/app'
 
       // Include visual edit selection context if user selected an element
       if (request.selectionData) {

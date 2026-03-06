@@ -76,9 +76,32 @@ export class OpenCodeService {
     await sandbox.files.write('/home/user/opencode.json', JSON.stringify(config, null, 2))
     console.log('[OpenCode Service] Config written to /home/user/opencode.json')
 
-    // Start opencode serve in background
+    // Ensure git is configured in the app directory (same setup as Claude Agent SDK)
+    try {
+      await sandbox.commands.run(
+        `cd /home/user/app && git config user.name "E2B Sandbox" && git config user.email "sandbox@e2b.dev"`,
+        { timeoutMs: 5_000 },
+      )
+      // Initialize git if not already done (e.g. sandbox was recreated without full init)
+      const gitCheck = await sandbox.commands.run(
+        'cd /home/user/app && git rev-parse --is-inside-work-tree 2>/dev/null',
+        { timeoutMs: 5_000 },
+      )
+      if (gitCheck.exitCode !== 0) {
+        console.log('[OpenCode Service] Git not initialized in /home/user/app, initializing...')
+        await sandbox.commands.run(
+          'cd /home/user/app && git init && git add . && git commit -m "Initial commit" --allow-empty',
+          { timeoutMs: 15_000 },
+        )
+      }
+      console.log('[OpenCode Service] Git configured in /home/user/app')
+    } catch (e) {
+      console.warn('[OpenCode Service] Failed to configure git:', e)
+    }
+
+    // Start opencode serve in the app directory (where the git repo lives)
     await sandbox.commands.run(
-      `cd /home/user && OPENCODE_CONFIG=/home/user/opencode.json ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY || ''}" ${opencodeBin} serve --port ${OPENCODE_PORT} > /tmp/opencode.log 2>&1 &`,
+      `cd /home/user/app && OPENCODE_CONFIG=/home/user/opencode.json ANTHROPIC_API_KEY="${process.env.ANTHROPIC_API_KEY || ''}" ${opencodeBin} serve --port ${OPENCODE_PORT} > /tmp/opencode.log 2>&1 &`,
       {
         background: true as const,
         timeoutMs: 10_000,
@@ -229,7 +252,7 @@ export class OpenCodeService {
 
       // Build the user message with context (same as ClaudeCodeService)
       let fullMessage = request.userMessage
-      fullMessage += '\n\nCurrent working directory: /home/user'
+      fullMessage += '\n\nCurrent working directory: /home/user/app'
 
       // Include visual edit selection context
       if (request.selectionData) {
@@ -309,7 +332,7 @@ export class OpenCodeService {
         type: 'system',
         subtype: 'init',
         model: request.claudeModel || 'anthropic/claude-opus-4-5',
-        cwd: '/home/user',
+        cwd: '/home/user/app',
         tools: [],
         session_id: sessionId,
       }))
