@@ -247,6 +247,24 @@ export class OpenCodeService {
     callbacks: StreamingCallbacks,
   ): Promise<void> {
     try {
+      // Write AGENTS.md to the sandbox before starting the server.
+      // OpenCode auto-reads this file from the working directory.
+      let cloudEnabled = false
+      try {
+        const [project] = await db
+          .select({ convexProject: projects.convexProject })
+          .from(projects)
+          .where(eq(projects.id, request.projectId))
+          .limit(1)
+        cloudEnabled = (project?.convexProject as any)?.kind === 'connected'
+      } catch (e) {
+        console.error('[OpenCode Service] Failed to check cloud status:', e)
+      }
+
+      const systemPrompt = getPromptWithCloudStatus(cloudEnabled)
+      await sandbox.files.write('/home/user/app/AGENTS.md', systemPrompt)
+      console.log('[OpenCode Service] AGENTS.md written to sandbox')
+
       const baseUrl = await this.ensureServerRunning(sandbox, request.claudeModel)
       console.log('[OpenCode Service] Server URL:', baseUrl)
 
@@ -293,38 +311,6 @@ export class OpenCodeService {
         const sessionData = await createResp.json()
         sessionId = sessionData.id || sessionData.sessionId
         console.log('[OpenCode Service] Session created:', sessionId)
-
-        // Send system prompt as first message (no reply expected)
-        let cloudEnabled = false
-        try {
-          const [project] = await db
-            .select({ convexProject: projects.convexProject })
-            .from(projects)
-            .where(eq(projects.id, request.projectId))
-            .limit(1)
-          cloudEnabled = (project?.convexProject as any)?.kind === 'connected'
-        } catch (e) {
-          console.error('[OpenCode Service] Failed to check cloud status:', e)
-        }
-
-        const systemPrompt = getPromptWithCloudStatus(cloudEnabled)
-        try {
-          const sysResp = await fetch(`${baseUrl}/session/${sessionId}/message`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              parts: [{ type: 'text', text: `[SYSTEM INSTRUCTIONS - DO NOT REPEAT]\n${systemPrompt}` }],
-              model: parseModelId(request.claudeModel),
-              system: systemPrompt,
-              noReply: true,
-            }),
-            signal: AbortSignal.timeout(30_000),
-          })
-          console.log('[OpenCode Service] System prompt injected, status:', sysResp.status)
-        } catch (e) {
-          console.warn('[OpenCode Service] Failed to inject system prompt:', e)
-          // Not fatal — continue
-        }
       }
 
       // Emit init message (no prefix — raw JSON for the UI parser)
