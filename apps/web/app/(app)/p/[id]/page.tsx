@@ -38,6 +38,7 @@ import { useEffect, useState, useMemo, useCallback, useRef, SetStateAction } fro
 import { useCookieStorage } from '@/hooks/useCookieStorage'
 import { useClaudeModel } from '@/hooks/use-claude-model'
 import { useAgentType } from '@/hooks/use-agent-type'
+import { resolveModelForAgent } from '@/lib/claude-models'
 import { v4 as uuidv4 } from 'uuid'
 import { useErrorNotifications } from '@/hooks/useErrorNotifications'
 import { useNgrokHealthCheck } from '@/hooks/useNgrokHealthCheck'
@@ -108,8 +109,9 @@ function ProjectPageInternal() {
   useEffect(() => {
     if (agentTypeFromUrl && (agentTypeFromUrl === 'opencode' || agentTypeFromUrl === 'claude-code')) {
       setAgentType(agentTypeFromUrl)
+      setSelectedModel(resolveModelForAgent(selectedModel, agentTypeFromUrl))
     }
-  }, [agentTypeFromUrl, setAgentType])
+  }, [agentTypeFromUrl, setAgentType, setSelectedModel]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize model from URL if coming from home page
   useEffect(() => {

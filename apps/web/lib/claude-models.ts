@@ -65,6 +65,13 @@ export function getClaudeModelById(id: string): ClaudeModel | undefined {
   return CLAUDE_MODELS.find((m) => m.id === id) || OPENCODE_MODELS.find((m) => m.id === id)
 }
 
+/** Returns the model ID to use, falling back to the agent's default if the current value doesn't match */
+export function resolveModelForAgent(value: string, agentType: AgentType): string {
+  const models = getModelsForAgent(agentType)
+  if (models.some((m) => m.id === value)) return value
+  return getDefaultModelForAgent(agentType)
+}
+
 export function getDefaultClaudeModel(): ClaudeModel {
   return CLAUDE_MODELS.find((m) => m.isDefault) || CLAUDE_MODELS[0]
 }

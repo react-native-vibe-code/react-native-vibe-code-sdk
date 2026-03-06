@@ -20,6 +20,7 @@ import {
   getClaudeModelById,
   getModelsForAgent,
   getDefaultModelForAgent,
+  resolveModelForAgent,
   type AgentType,
 } from '@/lib/claude-models'
 import { Settings2, Bot, Cpu, Check } from 'lucide-react'
@@ -139,6 +140,15 @@ function CompactSelector({
 }) {
   const [open, setOpen] = useState(false)
 
+  // Resolve value to a valid model for the current agent type
+  const resolvedValue = resolveModelForAgent(value, agentType)
+
+  // Auto-correct the parent if stored value doesn't match
+  if (resolvedValue !== value) {
+    // Schedule for next tick to avoid setState during render
+    setTimeout(() => onChange(resolvedValue), 0)
+  }
+
   const handleAgentChange = (newAgent: AgentType) => {
     if (onAgentTypeChange) {
       onAgentTypeChange(newAgent)
@@ -161,7 +171,7 @@ function CompactSelector({
           className="h-10 text-xs border-gray-200 gap-1.5"
         >
           <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="hidden sm:inline">{currentModel?.name || models[0]?.name}</span>
+          <span className="hidden sm:inline">{getClaudeModelById(resolvedValue)?.name || models[0]?.name}</span>
           <span className="sm:hidden">AI</span>
         </Button>
       </DialogTrigger>
@@ -207,7 +217,7 @@ function CompactSelector({
             <label className="text-sm font-medium text-muted-foreground">Model</label>
             <div className="space-y-1.5">
               {models.map((model) => {
-                const isSelected = value === model.id
+                const isSelected = resolvedValue === model.id
                 return (
                   <button
                     key={model.id}
