@@ -68,14 +68,26 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
 
   return (
     <div>
-
+      {/* Mobile: Title + Description on top */}
+      <div className="lg:hidden mb-6 space-y-3">
+        <div className="flex items-start gap-1">
+          <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
+          {prompt.featured && (
+            <Badge className="bg-foreground text-background border-foreground/80 hover:bg-foreground flex-shrink-0">
+              Featured
+            </Badge>
+          )}
+        </div>
+        <p className="text-muted-foreground">{prompt.description}</p>
+      </div>
 
       {/* Side-by-side Layout */}
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* Left: Video + Gallery */}
         <div className="lg:w-[60%] flex flex-col sm:flex-row items-start gap-3">
+          {/* Desktop: video shown side-by-side with gallery */}
           {prompt.videoPreviewUrl && (
-            <div className="flex-1 min-w-0 flex justify-center">
+            <div className="hidden sm:flex flex-1 min-w-0 justify-center">
               <video
                 src={prompt.videoPreviewUrl}
                 autoPlay
@@ -92,14 +104,15 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
             <ScreenshotGallery
               screenshots={screenshots}
               title={prompt.title}
+              videoUrl={prompt.videoPreviewUrl}
             />
           </div>
         </div>
 
         {/* Right: Details */}
         <div className="lg:w-[40%] space-y-3">
-          {/* Title + Featured Badge */}
-          <div className="flex items-start gap-1">
+          {/* Title + Featured Badge (desktop only) */}
+          <div className="hidden lg:flex items-start gap-1">
             <h1 className="text-2xl font-bold text-foreground">{prompt.title}</h1>
             {prompt.featured && (
               <Badge className="bg-foreground text-background border-foreground/80 hover:bg-foreground flex-shrink-0">
@@ -108,8 +121,8 @@ export function PromptDetail({ slug, isAuthenticated }: PromptDetailProps) {
             )}
           </div>
 
-          {/* Description */}
-          <p className="text-muted-foreground">{prompt.description}</p>
+          {/* Description (desktop only) */}
+          <p className="hidden lg:block text-muted-foreground">{prompt.description}</p>
 
           {/* Tags */}
           {prompt.tags && prompt.tags.length > 0 && (

@@ -64,3 +64,6 @@ remotion/
 
 # Git worktrees
 .worktrees/
+
+# Screen references
+screen_references/
