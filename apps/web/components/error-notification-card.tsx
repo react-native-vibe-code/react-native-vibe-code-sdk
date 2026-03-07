@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { AlertCircle, Send, Eye, X } from 'lucide-react'
 import type { ErrorNotification } from '@/hooks/useErrorNotifications'
 
@@ -16,8 +17,33 @@ export function ErrorNotificationCard({
   onSendToFix,
   onViewDetails,
 }: ErrorNotificationCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [bottomOffset, setBottomOffset] = useState(0)
+
+  useEffect(() => {
+    // Find the chat input panel within the same parent container
+    const card = cardRef.current
+    if (!card) return
+
+    const container = card.parentElement
+    if (!container) return
+
+    const inputEl = container.querySelector('[data-chat-input]')
+    if (!inputEl) return
+
+    const updateOffset = () => {
+      setBottomOffset(inputEl.getBoundingClientRect().height)
+    }
+
+    updateOffset()
+
+    const observer = new ResizeObserver(updateOffset)
+    observer.observe(inputEl)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div className="mx-2 mb-2 bg-destructive/5 border border-destructive/20 rounded-lg p-3 shadow-sm animate-in slide-in-from-bottom-2 duration-300">
+    <div ref={cardRef} className="absolute left-0 right-0 z-10 mx-2 mb-2 bg-destructive/5 border border-destructive/20 rounded-lg p-3 shadow-lg backdrop-blur-sm animate-in slide-in-from-bottom-2 duration-300" style={{ bottom: bottomOffset }}>
       <div className="flex items-start gap-2">
         <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">

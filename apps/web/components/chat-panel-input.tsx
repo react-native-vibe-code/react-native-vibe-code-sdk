@@ -541,6 +541,7 @@ export const ChatPanelInput = memo(function ChatPanelInput({
 
   return (
     <div
+      data-chat-input
       className="p-2 pt-0 border-t bg-background flex-shrink-0 w-full"
       style={{
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',

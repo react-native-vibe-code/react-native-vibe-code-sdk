@@ -2413,41 +2413,39 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
               }}
             />
             {mobileActivePanel === 'chat' ? (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-hidden">
-                  <ChatPanel
-                    key={chatKey}
-                    status={streamStatus}
-                    messages={messages}
-                    input={input}
-                    handleInputChange={handleChatInputChange}
-                    handleSubmit={handleSubmitAuth}
-                    isLoading={isChatLoading}
-                    projectTitle={currentProject?.title || undefined}
-                    currentTemplate={
-                      currentProject?.template || templateFromUrl || selectedTemplate
-                    }
-                    sandboxId={currentProject?.sandboxId || undefined}
-                    pendingEditData={pendingEditData}
-                    projectId={projectId}
-                    userId={session?.user?.id}
-                    isRetrying={isRetrying}
-                    retryCount={retryCount}
-                    isWaitingForFirstMessage={!!firstMessageRef.current && messages.length === 0}
-                    selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
-                    agentType={agentType}
-                    onAgentTypeChange={opencodeEnabled ? setAgentType : undefined}
-                    imageAttachments={imageAttachments}
-                    onImageAttachmentsChange={setImageAttachments}
-                    selectedSkills={selectedSkills}
-                    onSelectedSkillsChange={setSelectedSkills}
-                    cloudEnabled={cloudEnabled}
-                    isCloudPanelOpen={mobileSidebarPanel === 'cloud'}
-                    onCloudPanelOpen={() => setMobileSidebarPanel('cloud')}
-                    onCloudPanelClose={() => setMobileSidebarPanel(null)}
-                  />
-                </div>
+              <div className="flex-1 flex flex-col overflow-hidden relative">
+                <ChatPanel
+                  key={chatKey}
+                  status={streamStatus}
+                  messages={messages}
+                  input={input}
+                  handleInputChange={handleChatInputChange}
+                  handleSubmit={handleSubmitAuth}
+                  isLoading={isChatLoading}
+                  projectTitle={currentProject?.title || undefined}
+                  currentTemplate={
+                    currentProject?.template || templateFromUrl || selectedTemplate
+                  }
+                  sandboxId={currentProject?.sandboxId || undefined}
+                  pendingEditData={pendingEditData}
+                  projectId={projectId}
+                  userId={session?.user?.id}
+                  isRetrying={isRetrying}
+                  retryCount={retryCount}
+                  isWaitingForFirstMessage={!!firstMessageRef.current && messages.length === 0}
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                  agentType={agentType}
+                  onAgentTypeChange={opencodeEnabled ? setAgentType : undefined}
+                  imageAttachments={imageAttachments}
+                  onImageAttachmentsChange={setImageAttachments}
+                  selectedSkills={selectedSkills}
+                  onSelectedSkillsChange={setSelectedSkills}
+                  cloudEnabled={cloudEnabled}
+                  isCloudPanelOpen={mobileSidebarPanel === 'cloud'}
+                  onCloudPanelOpen={() => setMobileSidebarPanel('cloud')}
+                  onCloudPanelClose={() => setMobileSidebarPanel(null)}
+                />
                 {latestError && (
                   <ErrorNotificationCard
                     error={latestError}
@@ -2525,41 +2523,39 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
                 <TabsTrigger value="chat">Chat</TabsTrigger>
                 <TabsTrigger value="panel">History</TabsTrigger>
               </TabsList>
-              <TabsContent value="chat" className="flex-1 m-0 overflow-hidden flex flex-col">
-                <div className="flex-1 overflow-hidden">
-                  <ChatPanel
-                    key={chatKey}
-                    status={streamStatus}
-                    messages={messages}
-                    input={input}
-                    handleInputChange={handleChatInputChange}
-                    handleSubmit={handleSubmitAuth}
-                    isLoading={isChatLoading}
-                    projectTitle={currentProject?.title || undefined}
-                    currentTemplate={
-                      currentProject?.template || templateFromUrl || selectedTemplate
-                    }
-                    sandboxId={currentProject?.sandboxId || undefined}
-                    pendingEditData={pendingEditData}
-                    projectId={projectId}
-                    userId={session?.user?.id}
-                    isRetrying={isRetrying}
-                    retryCount={retryCount}
-                    isWaitingForFirstMessage={!!firstMessageRef.current && messages.length === 0}
-                    selectedModel={selectedModel}
-                    onModelChange={setSelectedModel}
-                    agentType={agentType}
-                    onAgentTypeChange={opencodeEnabled ? setAgentType : undefined}
-                    imageAttachments={imageAttachments}
-                    onImageAttachmentsChange={setImageAttachments}
-                    selectedSkills={selectedSkills}
-                    onSelectedSkillsChange={setSelectedSkills}
-                    cloudEnabled={cloudEnabled}
-                    isCloudPanelOpen={desktopSidebarPanel === 'cloud'}
-                    onCloudPanelOpen={() => setDesktopSidebarPanel('cloud')}
-                    onCloudPanelClose={() => setDesktopSidebarPanel(null)}
-                  />
-                </div>
+              <TabsContent value="chat" className="flex-1 m-0 overflow-hidden flex flex-col relative">
+                <ChatPanel
+                  key={chatKey}
+                  status={streamStatus}
+                  messages={messages}
+                  input={input}
+                  handleInputChange={handleChatInputChange}
+                  handleSubmit={handleSubmitAuth}
+                  isLoading={isChatLoading}
+                  projectTitle={currentProject?.title || undefined}
+                  currentTemplate={
+                    currentProject?.template || templateFromUrl || selectedTemplate
+                  }
+                  sandboxId={currentProject?.sandboxId || undefined}
+                  pendingEditData={pendingEditData}
+                  projectId={projectId}
+                  userId={session?.user?.id}
+                  isRetrying={isRetrying}
+                  retryCount={retryCount}
+                  isWaitingForFirstMessage={!!firstMessageRef.current && messages.length === 0}
+                  selectedModel={selectedModel}
+                  onModelChange={setSelectedModel}
+                  agentType={agentType}
+                  onAgentTypeChange={opencodeEnabled ? setAgentType : undefined}
+                  imageAttachments={imageAttachments}
+                  onImageAttachmentsChange={setImageAttachments}
+                  selectedSkills={selectedSkills}
+                  onSelectedSkillsChange={setSelectedSkills}
+                  cloudEnabled={cloudEnabled}
+                  isCloudPanelOpen={desktopSidebarPanel === 'cloud'}
+                  onCloudPanelOpen={() => setDesktopSidebarPanel('cloud')}
+                  onCloudPanelClose={() => setDesktopSidebarPanel(null)}
+                />
                 {latestError && (
                   <ErrorNotificationCard
                     error={latestError}
