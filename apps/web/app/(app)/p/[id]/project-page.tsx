@@ -843,6 +843,9 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
                       template: currentProject.template as any,
                       recreated: true,
                     })
+
+                    // Refresh currentProject from DB to pick up new sandboxId
+                    await refreshProjectData()
                   }
                 } else {
                   // Sandbox exists, just restart the Expo server
@@ -1036,6 +1039,9 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
                 projectTitle: currentProject.title,
                 template: currentProject.template as any,
               })
+
+              // Refresh currentProject from DB to pick up new sandboxId
+              await refreshProjectData()
             }
           } catch (error) {
             console.error('[Server Check] Error resuming container:', error)
@@ -1190,6 +1196,9 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
               projectTitle: currentProject.title,
               template: currentProject.template as any,
             })
+
+            // Refresh currentProject from DB to pick up new sandboxId
+            await refreshProjectData()
           }
         } catch (resumeError) {
           console.error('[Server Check] Error resuming container:', resumeError)
@@ -1316,6 +1325,9 @@ export function ProjectPageInternal({ opencodeEnabled = false }: { opencodeEnabl
                   projectTitle: currentProject.title,
                   template: currentProject.template as any,
                 })
+
+                // Refresh currentProject from DB to pick up new sandboxId
+                await refreshProjectData()
               } else {
                 console.error('[Visibility] Failed to resume container:', result.error)
               }
