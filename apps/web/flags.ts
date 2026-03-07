@@ -3,6 +3,6 @@ import { vercelAdapter } from '@flags-sdk/vercel'
 
 export const opencodeEnabled = flag<boolean>({
   key: 'opencode',
-  adapter: vercelAdapter(),
+  adapter: process.env.FLAGS ? vercelAdapter() : undefined,
   defaultValue: false,
 })
