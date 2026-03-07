@@ -94,7 +94,11 @@ async function ensureUserSubscription(userId: string, customerId?: string) {
 }
 
 export const auth = betterAuth({
-  baseURL: process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_PROD_URL || 'https://www.reactnativevibecode.com' : getBaseURL(),
+  // Use VERCEL_ENV (not NODE_ENV) to distinguish production from preview/staging deployments.
+  // Vercel sets NODE_ENV='production' for ALL deployed environments (production AND preview/staging),
+  // so NODE_ENV alone cannot distinguish between them. VERCEL_ENV is 'production' only for
+  // the production branch, and 'preview' for staging/feature branches.
+  baseURL: process.env.VERCEL_ENV === 'production' ? process.env.NEXT_PUBLIC_PROD_URL || 'https://www.reactnativevibecode.com' : getBaseURL(),
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {
