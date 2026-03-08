@@ -30,6 +30,7 @@ interface NewsletterEmailProps {
   closingText?: string
   ctaText?: string
   ctaUrl?: string
+  unsubscribeUrl?: string
 }
 
 export default function NewsletterEmail({
@@ -43,6 +44,7 @@ export default function NewsletterEmail({
   closingText = 'All of these improvements are live right now. Jump in and start building.',
   ctaText = 'Open React Native Vibe Code',
   ctaUrl = 'https://www.reactnativevibecode.com',
+  unsubscribeUrl,
 }: NewsletterEmailProps) {
   return (
     <Html>
@@ -135,6 +137,14 @@ export default function NewsletterEmail({
             </Link>{' '}
             - Text to mobile & web apps in seconds
           </Text>
+          {unsubscribeUrl && (
+            <Text style={footer}>
+              <Link href={unsubscribeUrl} style={link}>
+                Unsubscribe
+              </Link>{' '}
+              from future emails
+            </Text>
+          )}
         </Container>
       </Body>
     </Html>

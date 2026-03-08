@@ -14,9 +14,10 @@ import {
 
 interface WelcomeEmailProps {
   name: string
+  unsubscribeUrl?: string
 }
 
-export default function WelcomeEmail({ name }: WelcomeEmailProps) {
+export default function WelcomeEmail({ name, unsubscribeUrl }: WelcomeEmailProps) {
   const firstName = name.split(' ')[0]
 
   return (
@@ -52,7 +53,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               <Text style={pricingFeature}>History restore</Text>
               <Text style={pricingFeature}>Email support</Text>
               <Section style={buttonSection}>
-                <Button style={button} href="https://www.reactnativevibecode.com">
+                <Button style={button} href="https://reactnativevibecode.com/subscribe">
                   Subscribe
                 </Button>
               </Section>
@@ -123,6 +124,14 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
           <Text style={footer}>
           <Link target='_blank' href="https://reactnativevibecode.com" style={link}>React Native Vibe Code</Link> - Text to mobile & web apps in seconds
           </Text>
+          {unsubscribeUrl && (
+            <Text style={footer}>
+              <Link href={unsubscribeUrl} style={link}>
+                Unsubscribe
+              </Link>{' '}
+              from future emails
+            </Text>
+          )}
         </Container>
       </Body>
     </Html>

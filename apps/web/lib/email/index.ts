@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import WelcomeEmail from './templates/welcome'
-import NewsletterEmail from './templates/newsletter'
+import NewsletterEmail from './templates/newsletter_1'
+import { getUnsubscribeUrl } from './unsubscribe'
 
 // Lazy initialization to avoid errors during Next.js build phase
 let _resend: Resend | null = null
@@ -25,7 +26,7 @@ export async function sendWelcomeEmail(user: { name: string; email: string }) {
     from: FROM_EMAIL,
     to: user.email,
     subject: 'Welcome to React Native Vibe Code!',
-    react: WelcomeEmail({ name: user.name }),
+    react: WelcomeEmail({ name: user.name, unsubscribeUrl: getUnsubscribeUrl(user.email) }),
   })
 
   if (error) {
@@ -71,7 +72,7 @@ export async function sendNewsletter(
       from: NEWSLETTER_FROM,
       to,
       subject,
-      react: NewsletterEmail(templateProps),
+      react: NewsletterEmail({ ...templateProps, unsubscribeUrl: getUnsubscribeUrl(to) }),
     }))
 
     const { data, error } = await getResend().batch.send(emails)

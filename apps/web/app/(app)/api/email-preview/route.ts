@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { render } from '@react-email/components'
 import { WelcomeEmail, NewsletterEmail } from '@/lib/email'
+import { getTemplate, newsletterTemplates } from '@/lib/email/templates/registry'
 
 const templates: Record<string, (params: URLSearchParams) => React.ReactElement> = {
   welcome: (params) =>
     WelcomeEmail({ name: params.get('name') || 'Jane Doe' }),
   newsletter: () => NewsletterEmail({}),
+}
+
+// Register all newsletter templates from the registry
+for (const t of newsletterTemplates) {
+  templates[t.name] = () => t.component({})
 }
 
 export async function GET(request: NextRequest) {
@@ -37,7 +43,8 @@ export async function GET(request: NextRequest) {
           <h1>Email Templates</h1>
           <p>Click a template to preview it in the browser.</p>
           <a href="/api/email-preview?template=welcome">Welcome Email <span>— sent when a user signs up</span></a>
-          <a href="/api/email-preview?template=newsletter">Newsletter <span>— weekly updates email</span></a>
+          <a href="/api/email-preview?template=newsletter">Newsletter (latest) <span>— weekly updates email</span></a>
+          ${newsletterTemplates.map((t) => `<a href="/api/email-preview?template=${t.name}">${t.name} <span>— ${t.subject} (${t.issueDate})</span></a>`).join('\n          ')}
         </body>
       </html>
     `

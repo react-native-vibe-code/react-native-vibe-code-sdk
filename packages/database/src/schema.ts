@@ -275,6 +275,7 @@ export const userRelations = relations(user, ({ many, one }) => ({
   promptMessages: many(promptMessages),
   twitterLink: one(twitterLinks),
   privacyPolicies: many(privacyPolicies),
+  emailPreferences: one(emailPreferences),
 }))
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -487,6 +488,45 @@ export const privacyPoliciesRelations = relations(privacyPolicies, ({ one }) => 
   }),
 }))
 
+// Email preferences table for newsletter opt-in/out
+export const emailPreferences = pgTable('email_preferences', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id')
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  subscribedToNewsletter: boolean('subscribed_to_newsletter').default(true).notNull(),
+  unsubscribedAt: timestamp('unsubscribed_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+// Newsletter sends table for tracking sent newsletters
+export const newsletterSends = pgTable('newsletter_sends', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  templateName: text('template_name').notNull(),
+  subject: text('subject').notNull(),
+  recipientCount: integer('recipient_count').notNull(),
+  sentBy: text('sent_by')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  sentAt: timestamp('sent_at').defaultNow(),
+})
+
+export const emailPreferencesRelations = relations(emailPreferences, ({ one }) => ({
+  user: one(user, {
+    fields: [emailPreferences.userId],
+    references: [user.id],
+  }),
+}))
+
+export const newsletterSendsRelations = relations(newsletterSends, ({ one }) => ({
+  sentByUser: one(user, {
+    fields: [newsletterSends.sentBy],
+    references: [user.id],
+  }),
+}))
+
 // UI Prompts gallery table
 export const uiPrompts = pgTable('ui_prompts', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -521,3 +561,5 @@ export type XBotState = typeof xBotState.$inferSelect
 export type PrivacyPolicy = typeof privacyPolicies.$inferSelect
 export type UiPrompt = typeof uiPrompts.$inferSelect
 export type NewUiPrompt = typeof uiPrompts.$inferInsert
+export type EmailPreference = typeof emailPreferences.$inferSelect
+export type NewsletterSend = typeof newsletterSends.$inferSelect
