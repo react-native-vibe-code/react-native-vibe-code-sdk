@@ -947,6 +947,14 @@ export function NavHeader({
           </Link>
         </div>
         <div className="flex items-center gap-1 md:gap-4">
+          {/* UI Prompts Button */}
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/ui-prompts" className="flex items-center gap-2">
+              <span className="text-sm">UI Prompts</span>
+              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-primary text-primary-foreground">New</Badge>
+            </Link>
+          </Button>
+
           {/* Docs Button */}
           <Button variant="ghost" size="sm" asChild>
             <Link href="https://docs.reactnativevibecode.com" className="flex items-center gap-2">
