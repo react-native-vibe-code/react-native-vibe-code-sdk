@@ -188,7 +188,7 @@ const defaultUpdates: NewsletterUpdate[] = [
   {
     title: 'Expo Ngrok Server Stability',
     description:
-      "Live preview is now rock-solid. We overhauled how we handle Expo's tunnel connections so your app preview stays connected and responsive. No more random disconnects or \"tunnel not found\" errors—a much more reliable live preview. More work to be done here, but much better overall experience now.",
+      "We overhauled how we handle Expo's tunnel connections so your app preview stays connected and responsive. No more random disconnects or \"tunnel not found\" errors—a much more reliable live preview. More work to be done here, but much better overall experience now.",
   },
   {
     title: 'Error Manager Library — Released & Fixed',
