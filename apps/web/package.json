@@ -28,6 +28,7 @@
     "@heroui/system": "^2.4.23",
     "@heroui/tabs": "^2.2.24",
     "@heroui/theme": "^2.4.23",
+    "@intercom/messenger-js-sdk": "^0.0.18",
     "@monaco-editor/react": "^4.7.0",
     "@neondatabase/serverless": "^1.0.1",
     "@octokit/rest": "^22.0.0",

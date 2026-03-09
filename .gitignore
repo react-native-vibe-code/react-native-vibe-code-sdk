@@ -67,3 +67,7 @@ remotion/
 
 # Screen references
 screen_references/
+
+# Claude Code
+.claude/scheduled_tasks.lock
+.claude/worktrees/
