@@ -33,10 +33,10 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log('🔵 [Upgrade Dot App] API called')
+  console.log('🔵 [Upgrade Remote Control] API called')
 
   const { id: projectId } = await params
-  console.log('📋 [Upgrade Dot App] Project ID:', projectId)
+  console.log('📋 [Upgrade Remote Control] Project ID:', projectId)
 
   if (!projectId) {
     return new Response(JSON.stringify({ error: 'Project ID is required' }), {
@@ -46,7 +46,7 @@ export async function GET(
   }
 
   // Query database to get sandbox ID from project
-  console.log('🔍 [Upgrade Dot App] Looking up project in database:', projectId)
+  console.log('🔍 [Upgrade Remote Control] Looking up project in database:', projectId)
   let sandboxId: string
   try {
     const project = await db
@@ -56,7 +56,7 @@ export async function GET(
       .limit(1)
 
     if (!project.length || !project[0].sandboxId) {
-      console.log('❌ [Upgrade Dot App] Project not found or no sandbox ID')
+      console.log('❌ [Upgrade Remote Control] Project not found or no sandbox ID')
       return new Response(
         JSON.stringify({
           error: 'Project not found or no active sandbox',
@@ -67,9 +67,9 @@ export async function GET(
     }
 
     sandboxId = project[0].sandboxId
-    console.log('✅ [Upgrade Dot App] Found sandbox ID:', sandboxId)
+    console.log('✅ [Upgrade Remote Control] Found sandbox ID:', sandboxId)
   } catch (dbError) {
-    console.error('💥 [Upgrade Dot App] Database query error:', dbError)
+    console.error('💥 [Upgrade Remote Control] Database query error:', dbError)
     return new Response(
       JSON.stringify({
         error: 'Failed to query project database',
@@ -81,13 +81,13 @@ export async function GET(
 
   try {
     // Connect to existing sandbox
-    console.log('🔌 [Upgrade Dot App] Connecting to sandbox:', sandboxId)
+    console.log('🔌 [Upgrade Remote Control] Connecting to sandbox:', sandboxId)
     let sbx
     try {
       sbx = await connectSandbox(sandboxId)
-      console.log('✅ [Upgrade Dot App] Successfully connected to sandbox')
+      console.log('✅ [Upgrade Remote Control] Successfully connected to sandbox')
     } catch (sandboxError: any) {
-      console.log('❌ [Upgrade Dot App] Failed to connect to sandbox:', sandboxError)
+      console.log('❌ [Upgrade Remote Control] Failed to connect to sandbox:', sandboxError)
       if (sandboxError.message?.includes('not found') || sandboxError.status === 404) {
         return new Response(
           JSON.stringify({
@@ -102,7 +102,7 @@ export async function GET(
 
     // Read all files from local floating-chat folder
     const localFloatingChatPath = path.join(process.cwd(), 'local-expo-app', 'features', 'floating-chat')
-    console.log('📂 [Upgrade Dot App] Reading local files from:', localFloatingChatPath)
+    console.log('📂 [Upgrade Remote Control] Reading local files from:', localFloatingChatPath)
 
     if (!fs.existsSync(localFloatingChatPath)) {
       return new Response(
@@ -115,19 +115,19 @@ export async function GET(
     }
 
     const files = getAllFiles(localFloatingChatPath)
-    console.log(`📦 [Upgrade Dot App] Found ${files.length} files to sync`)
+    console.log(`📦 [Upgrade Remote Control] Found ${files.length} files to sync`)
 
     // Delete existing floating-chat folder in sandbox
-    console.log('🗑️ [Upgrade Dot App] Deleting existing floating-chat folder in sandbox')
+    console.log('🗑️ [Upgrade Remote Control] Deleting existing floating-chat folder in sandbox')
     try {
       await sbx.commands.run('rm -rf /home/user/app/features/floating-chat', { timeoutMs: 30000 })
-      console.log('✅ [Upgrade Dot App] Existing folder deleted')
+      console.log('✅ [Upgrade Remote Control] Existing folder deleted')
     } catch (deleteError) {
-      console.log('⚠️ [Upgrade Dot App] Delete warning (may not exist):', deleteError)
+      console.log('⚠️ [Upgrade Remote Control] Delete warning (may not exist):', deleteError)
     }
 
     // Create necessary directories
-    console.log('📁 [Upgrade Dot App] Creating directory structure')
+    console.log('📁 [Upgrade Remote Control] Creating directory structure')
     const dirs = new Set<string>()
     for (const file of files) {
       const dir = path.dirname(file.relativePath)
@@ -152,18 +152,18 @@ export async function GET(
 
     for (const file of files) {
       const sandboxPath = `/home/user/app/features/floating-chat/${file.relativePath}`
-      console.log(`📝 [Upgrade Dot App] Writing: ${file.relativePath}`)
+      console.log(`📝 [Upgrade Remote Control] Writing: ${file.relativePath}`)
 
       try {
         await sbx.files.write(sandboxPath, file.content)
         syncedFiles.push(file.relativePath)
       } catch (writeError: any) {
-        console.error(`❌ [Upgrade Dot App] Failed to write ${file.relativePath}:`, writeError)
+        console.error(`❌ [Upgrade Remote Control] Failed to write ${file.relativePath}:`, writeError)
         errors.push(`${file.relativePath}: ${writeError.message || String(writeError)}`)
       }
     }
 
-    console.log(`✅ [Upgrade Dot App] Synced ${syncedFiles.length}/${files.length} files`)
+    console.log(`✅ [Upgrade Remote Control] Synced ${syncedFiles.length}/${files.length} files`)
 
     const result = {
       success: errors.length === 0,
@@ -179,7 +179,7 @@ export async function GET(
       headers: { 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('💥 [Upgrade Dot App] Unexpected error:', error)
+    console.error('💥 [Upgrade Remote Control] Unexpected error:', error)
     return new Response(
       JSON.stringify({
         error: 'Failed to sync floating-chat to sandbox',

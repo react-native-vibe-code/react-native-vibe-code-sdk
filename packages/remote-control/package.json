@@ -1,5 +1,5 @@
 {
-  "name": "@react-native-vibe-code/dot",
+  "name": "@react-native-vibe-code/remote-control",
   "version": "0.0.2",
   "license": "MIT",
   "main": "src/index.ts",
