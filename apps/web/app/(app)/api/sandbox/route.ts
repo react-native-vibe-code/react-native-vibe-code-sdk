@@ -174,10 +174,11 @@ export async function POST(req: Request) {
 
   // Create new sandbox if we don't have one already
   if (!sbx) {
-    const templateId =
-      fragment.template === 'react-native-expo'
-        ? 'sm3r39vktkmu37lna0qa'
-        : fragment.template
+    const templateIdMap: Record<string, string> = {
+      'react-native-expo': 'sm3r39vktkmu37lna0qa',
+      'expo-testing': 'wxe2y93k4kafhbwqg2br',
+    }
+    const templateId = templateIdMap[fragment.template] || fragment.template
 
     sbx = await Sandbox.create(templateId, {
       metadata: {
@@ -237,8 +238,8 @@ export async function POST(req: Request) {
 
   let publicUrl: string
 
-  // Handle React Native Expo specific setup
-  if (fragment.template === 'react-native-expo') {
+  // Handle React Native Expo specific setup (both production and testing templates)
+  if (fragment.template === 'react-native-expo' || fragment.template === 'expo-testing') {
     // Check available scripts
     const scriptsResult = await sbx.commands.run('cd /home/user/app && bun run')
     console.log(`Available scripts:`, scriptsResult.stdout)

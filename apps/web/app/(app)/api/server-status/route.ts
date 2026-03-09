@@ -93,8 +93,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Start Expo server for React Native projects
-    if (project.template === 'react-native-expo') {
+    // Start Expo server for React Native projects (both production and testing templates)
+    if (project.template === 'react-native-expo' || project.template === 'expo-testing') {
       try {
         const currentTunnelMode = await tunnelModeFlag()
         const serverResult = await startExpoServer(sandbox, project.id, undefined, currentTunnelMode as any)

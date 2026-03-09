@@ -60,16 +60,21 @@ export async function POST(req: NextRequest) {
       `[Recreate Container] Found project: ${project.id} with sandbox: ${project.sandboxId}`,
     )
 
-    // Create a new sandbox with codecommit template
+    // Create a new sandbox with the same template the project was created with
     let sandbox: Sandbox | null = null
     try {
-      // Use the same expo template as create-container for consistency
       const templateId = {
         expo: 'sm3r39vktkmu37lna0qa',
         tamagui: '10aeyh6gcn9lmorirs2z',
+        'expo-testing': 'wxe2y93k4kafhbwqg2br',
       }
-      const templateSelection: keyof typeof templateId = process.env.TEMPLATE_SELECTION as keyof typeof templateId || 'expo'
-      
+      // Use the project's stored template to pick the right sandbox image
+      const templateSelection: keyof typeof templateId =
+        project.template === 'expo-testing' ? 'expo-testing' :
+        project.template === 'tamagui' ? 'tamagui' : 'expo'
+
+      console.log(`[Recreate Container] Using template: ${templateSelection} (project.template: ${project.template})`)
+
       sandbox = await Sandbox.create(templateId[templateSelection], {
         timeoutMs: parseInt(process.env.E2B_SANDBOX_TIMEOUT_MS || '3600000'), // Use env var, default to 1 hour
       })
@@ -184,8 +189,8 @@ git pull origin main || git pull origin master || echo "No remote content to pul
       ts: Date.now() + 25 * 60 * 1000, // 25 minutes from now
     })
 
-    // Start Expo server for React Native projects
-    if (project.template === 'react-native-expo') {
+    // Start Expo server for React Native projects (both production and testing templates)
+    if (project.template === 'react-native-expo' || project.template === 'expo-testing') {
       try {
         const currentTunnelMode = await tunnelModeFlag()
         const serverResult = await startExpoServer(sandbox, project.id, undefined, currentTunnelMode as any)

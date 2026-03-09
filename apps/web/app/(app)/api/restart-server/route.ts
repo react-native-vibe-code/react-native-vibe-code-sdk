@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
       console.log('[Restart Server] Error killing processes (non-fatal):', error)
     }
 
-    // Start Expo server for React Native projects
-    if (project.template === 'react-native-expo') {
+    // Start Expo server for React Native projects (both production and testing templates)
+    if (project.template === 'react-native-expo' || project.template === 'expo-testing') {
       try {
         console.log('[Restart Server] Starting Expo server...')
         const currentTunnelMode = await tunnelModeFlag()
