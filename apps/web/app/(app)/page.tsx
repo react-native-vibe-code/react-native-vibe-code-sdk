@@ -1,6 +1,5 @@
 import { getServerSession } from '@/lib/auth/index'
 import { HomeClient } from '@/components/home-client'
-import { LandingFeaturesToggle } from '@/components/landing-features-toggle'
 import { opencodeEnabled } from '@/flags'
 
 export default async function Home() {
@@ -12,7 +11,6 @@ export default async function Home() {
       <div className="md:h-dvh flex">
         <HomeClient initialSession={session} opencodeEnabled={!!showOpencode} />
       </div>
-      {!session && <LandingFeaturesToggle />}
     </main>
   )
 }

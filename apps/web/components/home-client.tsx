@@ -4,6 +4,7 @@ import { AuthDialog } from '@/components/auth-dialog'
 import { ChatInput } from '@/components/chat-input'
 import { ImageAttachment } from '@/components/chat-panel-input'
 import { NavHeader } from '@/components/nav-header'
+import { FeatureMarquee } from '@/components/feature-marquee'
 import { useToast } from '@/components/ui/use-toast'
 import { useClaudeModel } from '@/hooks/use-claude-model'
 import { useAgentType } from '@/hooks/use-agent-type'
@@ -262,22 +263,8 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
             canUndo={false}
             onUndo={() => {}}
           />
-          <div className={`flex flex-1 justify-center relative ${initialSession ? 'items-center' : 'items-start pt-[100px] md:pt-[200px]'}`}>
-            <div className="text-center md:hidden p-4 md:p-0">
-              {!initialSession && (
-                <>
-                  <h2 className="text-2xl md:text-5xl font-semibold mb-2 text-center leading-[35px] md:leading-[70px] whitespace-normal px-0 md:px-0">
-                    The free and open source React Native vibe coding IDE
-                  </h2>
-                  <h2 className="text-2xl md:text-5xl font-semibold mb-2 text-center leading-[35px] md:leading-[70px] whitespace-normal px-0 md:px-0">
-                    Text to mobile & web apps in seconds
-                  </h2>
-                  <p className="text-muted-foreground mb-4 text-center text-md md:text-md px-0 md:px-0">
-                    Ask chat anything, and turn your words into iOS, Android and
-                    web apps at the same time.
-                  </p>
-                </>
-              )}
+          <div className="flex flex-1 justify-center relative items-center">
+            <div className="text-center md:hidden p-4 md:p-0 w-full">
               <ChatInput
                 hideHoverModeToggle
                 retry={() => {}}
@@ -303,22 +290,9 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
                 } : undefined}
                 onSkillsChange={setSelectedSkills}
               />
+              {!initialSession && <FeatureMarquee />}
             </div>
             <div className="text-center hidden md:block container">
-              {!initialSession && (
-                <>
-                  <h2 className="w-full m-auto text-xl md:text-3xl font-semibold mb-2 leading-[45px] md:leading-[45px] px-4 pb-0 md:px-0 animate-fade-in-up animation-delay-300">
-                    The free and open source React Native vibe coding IDE
-                  </h2>
-                  <h2 className="w-full m-auto text-xl md:text-3xl font-semibold mb-2 leading-[45px] md:leading-[45px] px-4 pb-0 md:px-0 animate-fade-in-up animation-delay-300">
-                    Text to mobile apps in seconds
-                  </h2>
-                  <p className="text-muted-foreground mb-4 text-center text-lg md:text-md px-4 md:px-0 animate-fade-in-up animation-delay-600 mb-12">
-                    Ask chat anything, and turn your words into iOS, Android and
-                    web apps at the same time.
-                  </p>
-                </>
-              )}
               <ChatInput
                 hideHoverModeToggle
                 retry={() => {}}
@@ -344,6 +318,7 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
                 } : undefined}
                 onSkillsChange={setSelectedSkills}
               />
+              {!initialSession && <FeatureMarquee />}
             </div>
           </div>
         </div>
