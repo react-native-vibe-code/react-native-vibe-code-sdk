@@ -29,6 +29,13 @@
       "when": 1772981012183,
       "tag": "0003_greedy_fat_cobra",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773111139050,
+      "tag": "0004_safe_pyro",
+      "breakpoints": true
     }
   ]
 }

@@ -520,9 +520,29 @@ export const emailPreferencesRelations = relations(emailPreferences, ({ one }) =
   }),
 }))
 
-export const newsletterSendsRelations = relations(newsletterSends, ({ one }) => ({
+export const newsletterSendsRelations = relations(newsletterSends, ({ one, many }) => ({
   sentByUser: one(user, {
     fields: [newsletterSends.sentBy],
+    references: [user.id],
+  }),
+  recipients: many(newsletterRecipients),
+}))
+
+// Individual recipient tracking per newsletter send
+export const newsletterRecipients = pgTable('newsletter_recipients', {
+  templateName: text('template_name').notNull(), // e.g. "newsletter_1"
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
+  sentAt: timestamp('sent_at').defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.templateName, table.userId] }),
+}))
+
+export const newsletterRecipientsRelations = relations(newsletterRecipients, ({ one }) => ({
+  user: one(user, {
+    fields: [newsletterRecipients.userId],
     references: [user.id],
   }),
 }))
@@ -563,3 +583,4 @@ export type UiPrompt = typeof uiPrompts.$inferSelect
 export type NewUiPrompt = typeof uiPrompts.$inferInsert
 export type EmailPreference = typeof emailPreferences.$inferSelect
 export type NewsletterSend = typeof newsletterSends.$inferSelect
+export type NewsletterRecipient = typeof newsletterRecipients.$inferSelect
