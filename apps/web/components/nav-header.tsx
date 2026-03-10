@@ -85,6 +85,7 @@ import { useDevMode } from '@/context/dev-mode-context'
 import { Code } from 'lucide-react'
 import { useSubscriptionStatus } from '@/lib/polar-client'
 import { ConvexConnection } from '@/components/convex/ConvexConnection'
+import posthog from 'posthog-js'
 
 interface NavHeaderProps {
   isProjectPage?: boolean
@@ -138,12 +139,17 @@ export function NavHeader({
   const [isDeploying, setIsDeploying] = useState(false)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [isRemixCopied, setIsRemixCopied] = useState(false)
+  const openSubscriptionModal = (source: string) => {
+    posthog.capture('subscription_modal_opened', { source })
+    setIsSubscriptionModalOpen(true)
+  }
+
   const { isProSubscriber, isLoading: isLoadingSubscription } =
     useSubscriptionStatus()
   const { resolvedTheme, setTheme, theme } = useTheme()
   const { isDevMode, setIsDevMode } = useDevMode()
   const pathname = usePathname()
-  const logoHref = pathname?.startsWith('/ui-prompts') ? '/ui-prompts' : '/'
+  const logoHref = pathname === '/ui-prompts' ? '/' : pathname?.startsWith('/ui-prompts/') ? '/ui-prompts' : '/'
 
   // Handle client-side mounting
   useEffect(() => {
@@ -833,7 +839,7 @@ export function NavHeader({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onSelect={(e) => {
                       e.preventDefault()
-                      setIsSubscriptionModalOpen(true)
+                      openSubscriptionModal('user_menu')
                     }}>
                       <Crown className="mr-2 h-4 w-4 text-muted-foreground" />
                       Manage Subscription
@@ -948,12 +954,14 @@ export function NavHeader({
         </div>
         <div className="flex items-center gap-1 md:gap-4">
           {/* UI Prompts Button */}
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/ui-prompts" className="flex items-center gap-2">
-              <span className="text-sm">UI Prompts</span>
-              <Badge className="text-[10px] px-1.5 py-0 h-4 bg-primary text-primary-foreground">New</Badge>
-            </Link>
-          </Button>
+          {!pathname?.startsWith('/ui-prompts') && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/ui-prompts" className="flex items-center gap-2">
+                <span className="text-sm">UI Prompts</span>
+                <Badge className="text-[10px] px-1.5 py-0 h-4 bg-primary text-primary-foreground">New</Badge>
+              </Link>
+            </Button>
+          )}
 
           {/* Docs Button */}
           <Button variant="ghost" size="sm" asChild>
@@ -1101,7 +1109,7 @@ export function NavHeader({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={(e) => {
                   e.preventDefault()
-                  setIsSubscriptionModalOpen(true)
+                  openSubscriptionModal('user_menu_mobile')
                 }}>
                   <Crown className="mr-2 h-4 w-4 text-muted-foreground" />
                   Manage Subscription

@@ -13,22 +13,8 @@ import { GlobalCommandPalette } from '@/components/global-command-palette'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_ENABLE_POSTHOG && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    person_profiles: 'identified_only',
-    session_recording: {
-      recordCrossOriginIframes: true,
-    }
-  })
-}
-
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  return process.env.NEXT_PUBLIC_ENABLE_POSTHOG ? (
-    <PostHogProviderJS client={posthog}>{children}</PostHogProviderJS>
-  ) : (
-    children
-  )
+  return <PostHogProviderJS client={posthog}>{children}</PostHogProviderJS>
 }
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {

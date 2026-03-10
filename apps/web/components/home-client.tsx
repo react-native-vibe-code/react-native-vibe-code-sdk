@@ -196,6 +196,12 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
       skillCount: selectedSkills.length,
     })
 
+    posthog.capture('project_created', {
+      template: selectedTemplate,
+      model: languageModel.model,
+      has_images: files.length > 0,
+    })
+
     // Clear files and skills after navigation
     setFiles([])
     setSelectedSkills([])

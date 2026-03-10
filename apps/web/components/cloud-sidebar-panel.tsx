@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import posthog from 'posthog-js'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -58,6 +59,7 @@ export function CloudSidebarPanel({
       }
 
       toast.success('Cloud enabled successfully! Your database is now ready.')
+      posthog.capture('cloud_enabled', { project_id: projectId })
       onCloudEnabled?.()
     } catch (error) {
       console.error('Failed to enable cloud:', error)

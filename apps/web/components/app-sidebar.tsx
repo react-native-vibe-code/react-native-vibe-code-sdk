@@ -23,6 +23,7 @@ import { UserMenu } from "@/components/user-menu"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import posthog from 'posthog-js'
 
 interface AppSidebarProps {
   children: React.ReactNode
@@ -126,7 +127,10 @@ function SidebarNav({
                 <SidebarMenuButton
                   tooltip="Chat"
                   isActive={activePanel === null}
-                  onClick={() => onPanelChange(null)}
+                  onClick={() => {
+                    posthog.capture('sidebar_section_clicked', { section: 'chat' })
+                    onPanelChange(null)
+                  }}
                   className={cn(
                     "transition-colors",
                     activePanel === null && "bg-accent"
@@ -141,7 +145,10 @@ function SidebarNav({
                   <SidebarMenuButton
                     tooltip={item.label}
                     isActive={activePanel === item.id}
-                    onClick={() => onPanelChange(activePanel === item.id ? null : item.id)}
+                    onClick={() => {
+                      posthog.capture('sidebar_section_clicked', { section: item.id })
+                      onPanelChange(activePanel === item.id ? null : item.id)
+                    }}
                     className={cn(
                       "transition-colors ",
                       activePanel === item.id && "bg-accent"

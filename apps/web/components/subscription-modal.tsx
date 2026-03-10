@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { cn } from '@/lib/utils'
 import { Badge } from './ui/badge'
 import { getSubscriptionStatus } from '@/app/(app)/actions/subscription'
+import posthog from 'posthog-js'
 
 interface SubscriptionModalProps {
   open: boolean
@@ -105,6 +106,10 @@ export function SubscriptionModal({
   }, [open])
 
   const handleSubscribe = async (plan: Plan) => {
+    posthog.capture('plan_selected', {
+      plan_name: plan.name,
+      plan_price: plan.price,
+    })
     if (!plan.productId) {
       toast({
         title: 'Configuration Error',

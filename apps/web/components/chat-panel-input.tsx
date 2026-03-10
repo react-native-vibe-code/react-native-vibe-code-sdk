@@ -25,6 +25,7 @@ import { useAudioRecorder } from '@/hooks/use-audio-recorder'
 import { isMobileDevice } from '@/lib/utils/device-detection'
 import type { AISkill } from '@/lib/skills'
 import { AI_SKILLS } from '@/lib/skills'
+import posthog from 'posthog-js'
 
 interface HoverSelectionData {
   elementId: string
@@ -475,6 +476,12 @@ export const ChatPanelInput = memo(function ChatPanelInput({
 
   // Enhanced submit handler that includes file edition metadata
   const enhancedHandleSubmit = (e: React.FormEvent) => {
+    posthog.capture('message_sent', {
+      has_images: imageAttachments.length > 0,
+      has_skills: selectedSkills.length > 0,
+      has_selection: !!latestSelection,
+    })
+
     // Stop recording if currently recording
     if (isRecording) {
       setIsRecording(false)

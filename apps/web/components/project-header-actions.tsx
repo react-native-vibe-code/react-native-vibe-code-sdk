@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { customAlphabet } from 'nanoid'
+import posthog from 'posthog-js'
 
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 7)
 
@@ -288,6 +289,10 @@ export function ProjectHeaderActions({
     }
 
     const isUpdate = !!(currentProject?.cloudflareProjectName || currentProject?.deployedUrl)
+    posthog.capture('publish_to_web_clicked', {
+      project_id: projectId,
+      is_update: isUpdate,
+    })
     setIsDeploying(true)
     try {
       toast.info(isUpdate ? 'Starting update...' : 'Starting deployment...')
@@ -364,6 +369,7 @@ export function ProjectHeaderActions({
   }
 
   const handleCopyRemixUrl = async () => {
+    posthog.capture('remix_clicked', { project_id: projectId })
     const url = getRemixUrl()
     if (!url) return
 
@@ -378,6 +384,7 @@ export function ProjectHeaderActions({
   }
 
   const handleDownload = async () => {
+    posthog.capture('download_clicked', { project_id: projectId })
     if (!projectId || !session?.user?.id) {
       console.error('[Download] Missing projectId or session')
       toast.error('Unable to download project')
@@ -572,7 +579,10 @@ export function ProjectHeaderActions({
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={onOpenAppStoreSubmissions}
+                  onClick={() => {
+                    posthog.capture('app_store_clicked', { project_id: projectId })
+                    onOpenAppStoreSubmissions?.()
+                  }}
                   disabled={!onOpenAppStoreSubmissions}
                 >
                   <svg
