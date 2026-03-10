@@ -23,7 +23,7 @@ import {
   resolveModelForAgent,
   type AgentType,
 } from '@/lib/claude-models'
-import { Settings2, Bot, Cpu, Check } from 'lucide-react'
+import { Settings2, Bot, Cpu, Check, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ClaudeModelSelectorProps {
@@ -177,7 +177,13 @@ function CompactSelector({
           <span className="sm:hidden">{agentType === 'opencode' ? 'OC' : 'CC'}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[360px]">
+      <DialogContent className="sm:max-w-[360px] relative">
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/80 transition-all sm:hidden"
+        >
+          <X className="w-4 h-4" />
+        </button>
         <DialogHeader>
           <DialogTitle>Agent Setup</DialogTitle>
         </DialogHeader>
