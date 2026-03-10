@@ -42,6 +42,7 @@ export function EmailAdminPanel() {
   const [testEmail, setTestEmail] = useState('rodrigofigueroa.name@gmail.com')
   const [sendingTest, setSendingTest] = useState(false)
   const [status, setStatus] = useState<SendStatus | null>(null)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     fetchHistory()
@@ -358,6 +359,29 @@ export function EmailAdminPanel() {
                 ? 'All Users Sent'
                 : `Send Batch (up to ${Math.min(status?.pendingCount || 0, status?.quotaRemaining || 100)} users)`}
         </button>
+      </section>
+
+      {/* Welcome Email Preview */}
+      <section className="border rounded-lg p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Welcome Email</h2>
+          <button
+            onClick={() => setShowWelcome(!showWelcome)}
+            className="px-4 py-2 text-sm bg-secondary text-secondary-foreground rounded-md font-medium hover:bg-secondary/80 transition-colors"
+          >
+            {showWelcome ? 'Hide Preview' : 'Show Preview'}
+          </button>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Sent automatically when a new user signs up.
+        </p>
+        {showWelcome && (
+          <iframe
+            src="/api/email-preview?template=welcome"
+            className="w-full h-[600px] border rounded-lg"
+            title="Welcome Email Preview"
+          />
+        )}
       </section>
 
       {/* Image Upload */}
