@@ -251,8 +251,8 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
   return (
     <>
       <AuthDialog open={isAuthDialogOpen} setOpen={setAuthDialog} />
-      <div className="grid w-full md:grid-cols-2">
-        <div className="flex flex-col w-full max-h-full max-w-6xl mx-auto px-0 overflow-auto col-span-2">
+      <div className="grid w-full md:grid-cols-2 md:h-full">
+        <div className="flex flex-col w-full h-full max-w-6xl mx-auto px-0 overflow-auto col-span-2">
           <NavHeader
             session={initialSession}
             showLogin={() => setAuthDialog(true)}
@@ -263,62 +263,47 @@ export function HomeClient({ initialSession, opencodeEnabled = false }: HomeClie
             canUndo={false}
             onUndo={() => {}}
           />
-          <div className="flex flex-1 justify-center relative items-center">
-            <div className="text-center md:hidden p-4 md:p-0 w-full">
-              <ChatInput
-                hideHoverModeToggle
-                retry={() => {}}
-                isErrored={false}
-                errorMessage=""
-                isLoading={false}
-                isRateLimited={false}
-                stop={() => {}}
-                input={chatInput}
-                handleInputChange={handleSaveInputChange}
-                handleSubmit={handleSubmitAuth}
-                isMultiModal={currentModel?.multiModal || false}
-                files={files}
-                handleFileChange={handleFileChange}
-                disabled={false}
-                isAuthenticated={!!initialSession}
-                selectedModel={selectedModel}
-                onModelChange={setSelectedModel}
-                agentType={agentType}
-                onAgentTypeChange={opencodeEnabled ? (newType) => {
-                  setAgentType(newType)
-                  setSelectedModel(getDefaultModelForAgent(newType))
-                } : undefined}
-                onSkillsChange={setSelectedSkills}
-              />
-              {!initialSession && <FeatureMarquee />}
-            </div>
-            <div className="text-center hidden md:block container">
-              <ChatInput
-                hideHoverModeToggle
-                retry={() => {}}
-                isErrored={false}
-                errorMessage=""
-                isLoading={false}
-                isRateLimited={false}
-                stop={() => {}}
-                input={chatInput}
-                handleInputChange={handleSaveInputChange}
-                handleSubmit={handleSubmitAuth}
-                isMultiModal={currentModel?.multiModal || false}
-                files={files}
-                handleFileChange={handleFileChange}
-                disabled={false}
-                isAuthenticated={!!initialSession}
-                selectedModel={selectedModel}
-                onModelChange={setSelectedModel}
-                agentType={agentType}
-                onAgentTypeChange={opencodeEnabled ? (newType) => {
-                  setAgentType(newType)
-                  setSelectedModel(getDefaultModelForAgent(newType))
-                } : undefined}
-                onSkillsChange={setSelectedSkills}
-              />
-              {!initialSession && <FeatureMarquee />}
+          <div className="flex flex-1 justify-center relative items-center min-h-[400px]">
+            <div className="input-wrapper relative flex flex-col items-center justify-center w-full h-full">
+              <div className="w-full md:absolute md:top-1/2 md:-mt-[30px] md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-20 px-4 md:px-0 ">
+                <div className="relative w-full max-w-[755px] mx-auto">
+                  <ChatInput
+                    hideHoverModeToggle
+                    retry={() => {}}
+                    isErrored={false}
+                    errorMessage=""
+                    isLoading={false}
+                    isRateLimited={false}
+                    stop={() => {}}
+                    input={chatInput}
+                    handleInputChange={handleSaveInputChange}
+                    handleSubmit={handleSubmitAuth}
+                    isMultiModal={currentModel?.multiModal || false}
+                    files={files}
+                    handleFileChange={handleFileChange}
+                    disabled={false}
+                    isAuthenticated={!!initialSession}
+                    selectedModel={selectedModel}
+                    onModelChange={setSelectedModel}
+                    agentType={agentType}
+                    onAgentTypeChange={opencodeEnabled ? (newType) => {
+                      setAgentType(newType)
+                      setSelectedModel(getDefaultModelForAgent(newType))
+                    } : undefined}
+                    onSkillsChange={setSelectedSkills}
+                  />
+                  {!initialSession && (
+                    <div className="hidden md:block absolute top-full left-1/2 -translate-x-1/2 w-[100vw] max-w-6xl mt-4">
+                      <FeatureMarquee />
+                    </div>
+                  )}
+                </div>
+                {!initialSession && (
+                  <div className="md:hidden mt-0">
+                    <FeatureMarquee />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

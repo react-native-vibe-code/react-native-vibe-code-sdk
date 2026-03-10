@@ -11,7 +11,7 @@ export const FEATURES = [
   {
     id: 'agent',
     title: 'Best Code Agent',
-    description: 'React Native Vibe Code integrates Claude Code, the revolutionary coding agent. Powered by Claude Opus 4.5 by default.',
+    description: 'Integrated Claude Code agent. Powered by Claude Opus 4.5 by default.',
     icon: <Sparkles className="w-5 h-5 text-indigo-500" />,
     bg: 'bg-indigo-500/10',
     color: 'text-indigo-500',
@@ -40,7 +40,7 @@ export const FEATURES = [
   {
     id: 'history',
     title: 'History Backup',
-    description: 'Rollback to any previous version. Every change is saved on each prompt.',
+    description: 'Rollback to any previous version. Every change is saved automatically.',
     icon: <History className="w-5 h-5 text-amber-500" />,
     bg: 'bg-amber-500/10',
     color: 'text-amber-500',
@@ -99,7 +99,7 @@ export const FEATURES = [
   },
   {
     id: 'cloud',
-    title: 'Automatic Backend',
+    title: 'Fullstack Apps',
     description: 'Connected pieces: database and backend logic automatically created.',
     icon: <Database className="w-5 h-5 text-emerald-500" />,
     bg: 'bg-emerald-500/10',
@@ -134,18 +134,150 @@ export const FEATURES = [
   },
   {
     id: 'publish',
-    title: 'Publish to Web',
-    description: 'Make your web app go live with a custom domain in one click.',
+    title: 'Publish to Web and App Store',
+    description: 'Deploy to the web or submit to Apple App Store in one click.',
     icon: <Globe className="w-5 h-5 text-blue-500" />,
     bg: 'bg-blue-500/10',
     color: 'text-blue-500',
     content: (
       <div className="space-y-4">
-        <p className="text-muted-foreground">Your universal app running on the web right away, then publish to app stores.</p>
-        <div className="w-full p-4 rounded-lg bg-muted-foreground/5 border border-muted-foreground/10">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm text-muted-foreground font-mono truncate">http://my-amazing-app.pages.dev</span>
+        <p className="text-muted-foreground">Your universal app running on the web right away, or published to Apple App Store via our automated EAS integration.</p>
+        <div className="flex flex-col gap-2">
+          <div className="w-full p-4 rounded-lg bg-muted-foreground/5 border border-muted-foreground/10">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-sm text-muted-foreground font-mono truncate">http://my-amazing-app.pages.dev</span>
+            </div>
+          </div>
+          <div className="w-full p-4 rounded-lg bg-muted-foreground/5 border border-muted-foreground/10">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground font-mono truncate">Submitted to App Store Connect</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'errors',
+    title: 'Instant Error Fixing',
+    description: 'Get instant feedback and callstack of errors to send back for agent to fix.',
+    icon: <Zap className="w-5 h-5 text-red-500" />,
+    bg: 'bg-red-500/10',
+    color: 'text-red-500',
+    content: (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Centralized error detection across your stack. No more guessing why things failed.</p>
+        <div className="space-y-2">
+          <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs font-bold text-red-500 uppercase">Runtime Error</span>
+            </div>
+            <p className="text-xs font-mono text-muted-foreground line-clamp-2">TypeError: Cannot read property 'map' of undefined</p>
+          </div>
+          <div className="flex gap-2">
+            <div className="flex-1 py-2 px-3 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold text-center">
+              Send to Fix
+            </div>
+            <div className="flex-1 py-2 px-3 rounded-lg bg-muted text-muted-foreground text-[10px] font-bold text-center">
+              View Details
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'remote',
+    title: 'Remote control on your phone',
+    description: 'Vibe code inside your app preview on Expo Go. Real-time editing.',
+    icon: <Smartphone className="w-5 h-5 text-indigo-500" />,
+    bg: 'bg-indigo-500/10',
+    color: 'text-indigo-500',
+    content: (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">The ultimate mobile development experience. Open the floating AI button inside Expo Go to modify your code while you use the app.</p>
+        <div className="relative h-40 w-full rounded-2xl bg-slate-950 overflow-hidden border border-slate-800 flex items-center justify-center">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent" />
+          <div className="w-24 h-48 bg-slate-900 rounded-3xl border-2 border-slate-700 relative flex flex-col overflow-hidden shadow-2xl scale-90">
+             <div className="h-3 w-full bg-slate-800" />
+             <div className="flex-1 p-3">
+                <div className="h-1.5 w-full bg-slate-700 rounded-full mb-2" />
+                <div className="h-1.5 w-3/4 bg-slate-700 rounded-full mb-4" />
+                <div className="space-y-1">
+                   <div className="h-8 w-full bg-indigo-500/10 rounded-lg border border-indigo-500/20" />
+                   <div className="h-8 w-full bg-slate-800/50 rounded-lg border border-slate-700/50" />
+                </div>
+             </div>
+             {/* The floating dot */}
+             <div className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-indigo-500 shadow-lg shadow-indigo-500/50 flex items-center justify-center animate-bounce">
+                <Sparkles className="w-4 h-4 text-white" />
+             </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'ai-apps',
+    title: 'Create AI apps',
+    description: "Use / command to create apps powered by Claude LLM models.",
+    icon: <Sparkles className="w-5 h-5 text-cyan-500" />,
+    bg: 'bg-cyan-500/10',
+    color: 'text-cyan-500',
+    content: (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Build powerful AI-driven applications with ease. Simply type / and select the AI App integration to get started with Claude LLM models.</p>
+        <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <div className="px-2 py-1 rounded bg-muted text-xs font-mono font-bold">/</div>
+            <span className="text-sm text-foreground">Select integration...</span>
+          </div>
+          <div className="pl-6 space-y-2">
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
+              <Sparkles className="w-4 h-4 text-cyan-500" />
+              <span className="text-sm font-medium text-cyan-600">AI App</span>
+            </div>
+            <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 opacity-50">
+              <Database className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Database</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 'assets',
+    title: 'Asset uploads',
+    description: 'Add images and files to your app directly inside the codebase.',
+    icon: <Image className="w-5 h-5 text-emerald-500" />,
+    bg: 'bg-emerald-500/10',
+    color: 'text-emerald-500',
+    content: (
+      <div className="space-y-4">
+        <p className="text-muted-foreground">Easily manage your project assets. Upload images, icons, and files directly to your codebase for the agent to use in your app.</p>
+        <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+              <Image className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <div className="h-2 w-24 bg-emerald-500/20 rounded-full mb-2" />
+              <div className="h-1.5 w-16 bg-muted-foreground/20 rounded-full" />
+            </div>
+            <div className="px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-[10px] font-bold">
+              Upload
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="aspect-square rounded-lg bg-muted-foreground/10 border border-dashed border-muted-foreground/20 flex items-center justify-center">
+                <span className="text-[10px] text-muted-foreground">Asset {i}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -194,13 +326,13 @@ export const FEATURES = [
   {
     id: 'integrations',
     title: 'Integrations',
-    description: 'Hundreds of APIs like Google Maps, Search, and Resend built-in.',
+    description: 'Integrations to use google search api, EXA people search and more.',
     icon: <Plug className="w-5 h-5 text-orange-500" />,
     bg: 'bg-orange-500/10',
     color: 'text-orange-500',
     content: (
       <div className="space-y-4">
-        <p className="text-muted-foreground">Ready-to-use libraries that the agent can implement instantly without API key hassle.</p>
+        <p className="text-muted-foreground">Ready-to-use libraries like Google Search, EXA People Search, and more that the agent can implement instantly without API key hassle.</p>
         <div className="grid grid-cols-4 gap-3">
           {["https://cdn-icons-png.flaticon.com/512/5968/5968854.png", "https://cdn-icons-png.flaticon.com/512/732/732221.png", "https://cdn-icons-png.flaticon.com/512/733/733609.png", "https://cdn-icons-png.flaticon.com/512/281/281763.png"].map((src, i) => (
             <div key={i} className="h-12 w-12 rounded-xl bg-white dark:bg-gray-300 shadow-sm flex items-center justify-center p-2">
@@ -231,7 +363,7 @@ export function FeatureMarquee() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-foreground mb-1 group-hover/card:text-primary transition-colors">{feature.title}</h4>
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed whitespace-normal">
                     {feature.description}
                   </p>
                 </div>
@@ -268,12 +400,6 @@ export function FeatureMarquee() {
                   <div className="text-foreground leading-relaxed">
                     {selectedFeature.content}
                   </div>
-                  <button
-                    onClick={() => setSelectedFeature(null)}
-                    className="w-full mt-8 py-4 rounded-2xl bg-foreground text-background font-bold hover:opacity-90 active:scale-[0.98] transition-all shadow-lg"
-                  >
-                    Got it
-                  </button>
                 </div>
               </div>
             )}
@@ -283,10 +409,10 @@ export function FeatureMarquee() {
       <style jsx global>{`
         @keyframes scroll-left {
           0% { transform: translateX(0); }
-          100% { transform: translateX(calc(-280px * 8 - 1rem * 8)); }
+          100% { transform: translateX(calc(-280px * 12 - 1rem * 12)); }
         }
         .animate-scroll-left {
-          animation: scroll-left 40s linear infinite;
+          animation: scroll-left 30s linear infinite;
         }
       `}</style>
     </div>
