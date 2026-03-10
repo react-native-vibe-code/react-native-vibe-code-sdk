@@ -33,6 +33,7 @@ interface ProjectHeaderActionsProps {
   projectId?: string
   projectTitle?: string
   sandboxId?: string
+  isSandboxRecovering?: boolean
   currentProject?: Project | null
   onProjectUpdate?: (project: Project) => void
   onOpenAppStoreSubmissions?: () => void
@@ -43,6 +44,7 @@ export function ProjectHeaderActions({
   projectId,
   projectTitle,
   sandboxId,
+  isSandboxRecovering = false,
   currentProject: externalCurrentProject,
   onProjectUpdate,
   onOpenAppStoreSubmissions,
@@ -428,7 +430,7 @@ export function ProjectHeaderActions({
           variant="ghost"
           className="p-2 px-4"
           onClick={handleDownload}
-          disabled={!projectId || !session?.user?.id}
+          disabled={!projectId || !session?.user?.id || isSandboxRecovering}
         >
           <Download className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline">Download</span>
@@ -442,7 +444,7 @@ export function ProjectHeaderActions({
             <Button
               variant="ghost"
               className="p-2 px-4"
-              disabled={!projectId || !sandboxId || !session?.user?.id}
+              disabled={!projectId || !sandboxId || !session?.user?.id || isSandboxRecovering}
             >
               <Rocket className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Publish</span>

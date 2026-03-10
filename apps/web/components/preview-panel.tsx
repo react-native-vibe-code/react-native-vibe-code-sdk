@@ -36,6 +36,7 @@ interface PreviewPanelProps {
   code?: string
   previewUrl?: string
   isGenerating?: boolean
+  isSandboxRecovering?: boolean
   appData?: any
   result?: any
   sandboxId?: string
@@ -62,6 +63,7 @@ export function PreviewPanel({
   code,
   previewUrl,
   isGenerating,
+  isSandboxRecovering = false,
   appData,
   result,
   sandboxId,
@@ -850,6 +852,7 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
             projectId={projectId}
             projectTitle={projectTitle}
             sandboxId={sandboxId}
+            isSandboxRecovering={isSandboxRecovering}
             currentProject={currentProject}
             onProjectUpdate={onProjectUpdate}
             onOpenAppStoreSubmissions={() => setShowAppStoreSubmissions(true)}
@@ -876,6 +879,13 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
 
           {/* Preview content - always mounted, hidden when code mode is active */}
           <div className={cn("h-full", contentMode === 'code' && "hidden")}>
+          {/* Sandbox recovering banner */}
+          {isSandboxRecovering && (
+            <div className="absolute top-0 left-0 right-0 z-40 bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Sandbox is restarting...
+            </div>
+          )}
           {/* Loading overlay - shown on top of iframes when loading */}
           {isLoading && (
             <div className="absolute inset-0 z-50 h-full flex min-w-full items-center justify-center bg-background">

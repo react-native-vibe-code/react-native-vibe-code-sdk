@@ -20,6 +20,7 @@ interface ChatPanelProps {
   currentTemplate?: string
   status: 'streaming' | 'error' | 'submitted' | 'ready'
   sandboxId?: string | null
+  isSandboxRecovering?: boolean
   pendingEditData?: { fileEdition: string; selectionData: any } | null
   projectId?: string
   userId?: string
@@ -49,6 +50,7 @@ export function ChatPanel({
   isLoading,
   status,
   sandboxId,
+  isSandboxRecovering = false,
   projectId,
   userId,
   isWaitingForFirstMessage,
@@ -117,6 +119,7 @@ export function ChatPanel({
           handleSubmit={props.handleSubmit}
           isLoading={props.isLoading}
           sandboxId={props.sandboxId}
+          isSandboxRecovering={isSandboxRecovering}
           isHoverModeEnabled={props.isHoverModeEnabled}
           onToggleHoverMode={props.onToggleHoverMode}
           onDisableHoverMode={props.onDisableHoverMode}

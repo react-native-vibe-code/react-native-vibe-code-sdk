@@ -46,6 +46,7 @@ import { useStreamRecovery } from '@/hooks/useStreamRecovery'
 import { searchService } from '@/lib/search-service'
 import { useViewMode } from '@/context/view-mode-context'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { AppSidebar } from '@/components/app-sidebar'
 import Loading from './loading'
@@ -527,6 +528,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
   const [appData, setAppData] = useState<any>()
   const [currentTab, setCurrentTab] = useState<'code' | 'fragment'>('code')
   const [isPreviewLoading, setIsPreviewLoading] = useState(false)
+  const [isSandboxRecovering, setIsSandboxRecovering] = useState(false)
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [userTeam, setUserTeam] = useState<any>(null)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
@@ -1294,6 +1296,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
             // Show loading state while resuming (ONLY when actually resuming)
             isStartingServerRef.current = true
             setIsPreviewLoading(true)
+            setIsSandboxRecovering(true)
+            toast.info('Restarting sandbox...')
             try {
               const response = await fetch('/api/resume-container', {
                 method: 'POST',
@@ -1332,13 +1336,21 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
 
                 // Reload chat history after sandbox resume
                 setIsHistoryLoaded(false)
+
+                // Force iframe remount
+                setPreviewKey(prev => prev + 1)
+
+                toast.success('Sandbox ready!')
               } else {
                 console.error('[Visibility] Failed to resume container:', result.error)
+                toast.error('Failed to restart sandbox')
               }
             } catch (error) {
               console.error('[Visibility] Error resuming container:', error)
+              toast.error('Failed to restart sandbox')
             } finally {
               setIsPreviewLoading(false)
+              setIsSandboxRecovering(false)
               isStartingServerRef.current = false
             }
             return
@@ -1381,6 +1393,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               // Only show loading UI when actually restarting (ONLY when Expo server is down)
               isStartingServerRef.current = true
               setIsPreviewLoading(true)
+              setIsSandboxRecovering(true)
+              toast.info('Restarting sandbox...')
               try {
                 const response = await fetch('/api/start-server', {
                   method: 'POST',
@@ -1414,11 +1428,20 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                   })
 
                   console.log('[Visibility] Result set with cache-busted URL:', urlWithTimestamp)
+
+                  // Force iframe remount
+                  setPreviewKey(prev => prev + 1)
+
+                  toast.success('Sandbox ready!')
+                } else {
+                  toast.error('Failed to restart server')
                 }
               } catch (error) {
                 console.error('[Visibility] Error restarting Expo server:', error)
+                toast.error('Failed to restart server')
               } finally {
                 setIsPreviewLoading(false)
+                setIsSandboxRecovering(false)
                 isStartingServerRef.current = false
               }
             } catch (error) {
@@ -2470,6 +2493,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                     currentProject?.template || templateFromUrl || selectedTemplate
                   }
                   sandboxId={currentProject?.sandboxId || undefined}
+                  isSandboxRecovering={isSandboxRecovering}
                   pendingEditData={pendingEditData}
                   projectId={projectId}
                   userId={session?.user?.id}
@@ -2508,6 +2532,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                 code={code}
                 previewUrl={(result as any)?.url}
                 isGenerating={isPreviewLoading}
+                isSandboxRecovering={isSandboxRecovering}
                 appData={appData}
                 result={result}
                 sandboxId={currentProject?.sandboxId || undefined}
@@ -2565,7 +2590,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'chat' | 'panel')} className="flex-1 flex flex-col">
               <TabsList className="grid w-full grid-cols-2 rounded-none border-b h-[50px] bg-background px-4">
                 <TabsTrigger value="chat">Chat</TabsTrigger>
-                <TabsTrigger value="panel">History</TabsTrigger>
+                <TabsTrigger value="panel" disabled={isSandboxRecovering}>History</TabsTrigger>
               </TabsList>
               <TabsContent value="chat" className="flex-1 m-0 overflow-hidden flex flex-col relative">
                 <ChatPanel
@@ -2581,6 +2606,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                     currentProject?.template || templateFromUrl || selectedTemplate
                   }
                   sandboxId={currentProject?.sandboxId || undefined}
+                  isSandboxRecovering={isSandboxRecovering}
                   pendingEditData={pendingEditData}
                   projectId={projectId}
                   userId={session?.user?.id}
@@ -2632,6 +2658,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               code={code}
               previewUrl={(result as any)?.url}
               isGenerating={isPreviewLoading}
+              isSandboxRecovering={isSandboxRecovering}
               appData={appData}
               result={result}
               sandboxId={currentProject?.sandboxId || undefined}

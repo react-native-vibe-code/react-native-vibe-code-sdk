@@ -60,6 +60,7 @@ interface ChatPanelInputProps {
   handleSubmit: (e: React.FormEvent, options?: ChatRequestOptions) => void
   isLoading: boolean
   sandboxId?: string | null
+  isSandboxRecovering?: boolean
   isHoverModeEnabled: boolean
   onToggleHoverMode: (enabled: boolean) => void
   onDisableHoverMode: () => void
@@ -85,6 +86,7 @@ export const ChatPanelInput = memo(function ChatPanelInput({
   handleSubmit,
   isLoading,
   sandboxId,
+  isSandboxRecovering = false,
   isHoverModeEnabled,
   onToggleHoverMode,
   onDisableHoverMode,
@@ -644,7 +646,9 @@ export const ChatPanelInput = memo(function ChatPanelInput({
                 <ChatEditor
                   ref={editorRef}
                   placeholder={
-                    latestSelection
+                    isSandboxRecovering
+                      ? 'Sandbox is restarting...'
+                      : latestSelection
                       ? 'Describe changes for the selected element...'
                       : isRecording
                       ? useRealtimeVoice
@@ -656,7 +660,7 @@ export const ChatPanelInput = memo(function ChatPanelInput({
                       ? 'Describe what you want to build...'
                       : 'Make changes, add new features, type / for integrations...'
                   }
-                  disabled={isLoading}
+                  disabled={isLoading || isSandboxRecovering}
                   onContentChange={(text, skills) => {
                     lastEditorContentRef.current = text
                     const event = {
@@ -711,11 +715,11 @@ export const ChatPanelInput = memo(function ChatPanelInput({
             <Button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || isUploadingImages}
+              disabled={isLoading || isUploadingImages || isSandboxRecovering}
               size="icon"
               variant="outline"
               className="rounded-xl h-10 w-10"
-              title="Attach images"
+              title={isSandboxRecovering ? 'Sandbox is restarting...' : 'Attach images'}
             >
               {isUploadingImages ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -727,7 +731,7 @@ export const ChatPanelInput = memo(function ChatPanelInput({
             <Button
               type="button"
               onClick={toggleRecording}
-              disabled={isTranscribing || (isLoading && useRealtimeVoice)}
+              disabled={isTranscribing || (isLoading && useRealtimeVoice) || isSandboxRecovering}
               size="icon"
               variant={isRecording ? "destructive" : "outline"}
               className="rounded-xl h-10 w-10"
@@ -751,7 +755,7 @@ export const ChatPanelInput = memo(function ChatPanelInput({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || (!input?.trim() && imageAttachments.length === 0 && selectedSkills.length === 0)}
+              disabled={isLoading || isSandboxRecovering || (!input?.trim() && imageAttachments.length === 0 && selectedSkills.length === 0)}
               size="icon"
               className="rounded-xl h-10 w-10"
             >
