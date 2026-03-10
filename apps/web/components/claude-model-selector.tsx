@@ -177,79 +177,77 @@ function CompactSelector({
           <span className="sm:hidden">{agentType === 'opencode' ? 'OC' : 'CC'}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[360px] border-none p-0 bg-transparent shadow-2xl">
-        <div className="bg-card border border-border/50 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200 relative p-6">
-          <button
-            onClick={() => setOpen(false)}
-            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/80 transition-all"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-left">Agent Setup</DialogTitle>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[360px]">
+        <button
+          onClick={() => setOpen(false)}
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-background/50 backdrop-blur-sm border border-border/50 text-foreground hover:bg-background/80 transition-all sm:hidden"
+        >
+          <X className="w-4 h-4" />
+        </button>
+        <DialogHeader>
+          <DialogTitle>Agent Setup</DialogTitle>
+        </DialogHeader>
 
-          <div className="space-y-4 pt-4">
-            {/* Agent selector */}
-            {onAgentTypeChange && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Agent</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {AGENTS.map((agent) => (
-                    <button
-                      key={agent.id}
-                      type="button"
-                      onClick={() => handleAgentChange(agent.id)}
-                      className={cn(
-                        'relative flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all active:scale-[0.98]',
-                        agentType === agent.id
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border hover:border-muted-foreground/30 hover:bg-accent'
-                      )}
-                    >
-                      {agentType === agent.id && (
-                        <Check className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
-                      )}
-                      <div className="flex items-center gap-1.5">
-                        <Bot className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-semibold">{agent.name}</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground leading-tight">{agent.description}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Model selector */}
+        <div className="space-y-4 pt-2">
+          {/* Agent selector */}
+          {onAgentTypeChange && (
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Model</label>
-              <div className="space-y-2">
-                {models.map((model) => {
-                  const isSelected = resolvedValue === model.id
-                  return (
-                    <button
-                      key={model.id}
-                      type="button"
-                      onClick={() => handleModelChange(model.id)}
-                      className={cn(
-                        'relative flex w-full items-start rounded-xl border p-3 text-left transition-all active:scale-[0.98]',
-                        isSelected
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border hover:border-muted-foreground/30 hover:bg-accent'
-                      )}
-                    >
-                      {isSelected && (
-                        <Check className="absolute top-3 right-3 h-4 w-4 text-primary" />
-                      )}
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-semibold">{model.name}</span>
-                        <span className="text-xs text-muted-foreground">{model.description}</span>
-                      </div>
-                    </button>
-                  )
-                })}
+              <label className="text-sm font-medium text-muted-foreground">Agent</label>
+              <div className="grid grid-cols-2 gap-2">
+                {AGENTS.map((agent) => (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => handleAgentChange(agent.id)}
+                    className={cn(
+                      'relative flex flex-col items-start gap-0.5 rounded-lg border p-3 text-left transition-colors',
+                      agentType === agent.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/30 hover:bg-accent'
+                    )}
+                  >
+                    {agentType === agent.id && (
+                      <Check className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
+                    )}
+                    <div className="flex items-center gap-1.5">
+                      <Bot className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">{agent.name}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{agent.description}</span>
+                  </button>
+                ))}
               </div>
+            </div>
+          )}
+
+          {/* Model selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Model</label>
+            <div className="space-y-1.5">
+              {models.map((model) => {
+                const isSelected = resolvedValue === model.id
+                return (
+                  <button
+                    key={model.id}
+                    type="button"
+                    onClick={() => handleModelChange(model.id)}
+                    className={cn(
+                      'relative flex w-full items-start rounded-lg border p-3 text-left transition-colors',
+                      isSelected
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-muted-foreground/30 hover:bg-accent'
+                    )}
+                  >
+                    {isSelected && (
+                      <Check className="absolute top-2 right-2 h-3.5 w-3.5 text-primary" />
+                    )}
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium">{model.name}</span>
+                      <span className="text-xs text-muted-foreground">{model.description}</span>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
