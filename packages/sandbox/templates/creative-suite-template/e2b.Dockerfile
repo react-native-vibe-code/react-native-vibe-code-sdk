@@ -75,9 +75,6 @@ RUN grep -q "ngrokurl" node_modules/@expo/cli/build/bin/cli && \
 # Switch back to root
 USER root
 
-# Expose the default Expo port
-EXPOSE 8081
-
 # Create claude-sdk directory in container root with proper permissions
 WORKDIR /claude-sdk
 RUN chmod 755 /claude-sdk && chown user:user /claude-sdk
