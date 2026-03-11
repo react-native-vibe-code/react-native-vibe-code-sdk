@@ -174,9 +174,6 @@ export const CodePanel = memo(function CodePanel({
   projectId,
   appData,
   hideHeader = false,
-  subscriptionStatus,
-  isLoadingSubscription = false,
-  onShowSubscriptionModal,
 }: CodePanelProps) {
   const { theme } = useTheme()
   const [isExpanded, setIsExpanded] = useState(true)
@@ -198,9 +195,7 @@ export const CodePanel = memo(function CodePanel({
   const isSavingRef = useRef(false)
   const editorInstanceRef = useRef<unknown>(null)
 
-  const canEdit = useMemo(() => {
-    return subscriptionStatus?.hasSubscription && subscriptionStatus?.status === 'active'
-  }, [subscriptionStatus])
+  const canEdit = true
 
   const fetchFileStructure = useCallback(
     async (isRetry = false) => {
@@ -593,6 +588,13 @@ export const CodePanel = memo(function CodePanel({
       await response.json()
       setSaveSuccess(true)
 
+      // Update IndexedDB cache with saved content for search consistency
+      if (projectId && selectedFilePath && fileContent) {
+        searchService.updateChangedFiles(projectId, [{ path: selectedFilePath }]).catch((error) => {
+          console.error('[CodePanel] Failed to update IndexedDB after save:', error)
+        })
+      }
+
       // Restore cursor position and selection after save
       if (editorInstanceRef.current && cursorPosition) {
         const editor = editorInstanceRef.current as {
@@ -849,31 +851,22 @@ export const CodePanel = memo(function CodePanel({
                       Save failed
                     </Badge>
                   )}
+                  {fileContent && selectedFilePath && (
+                    <Button variant="default" size="sm" onClick={saveFile} disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save'
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-
-          {/* Show Read Only notice for free users */}
-          {!isLoadingSubscription &&
-            subscriptionStatus &&
-            !subscriptionStatus.hasSubscription &&
-            currentContent && (
-              <div className="p-3 border-b bg-muted">
-                <div className="flex items-center text-xs text-muted-foreground">
-                  <span className="font-medium">Read Only.</span>
-                  <span className="ml-1">To use the code editor,</span>
-                  {onShowSubscriptionModal && (
-                    <button
-                      onClick={onShowSubscriptionModal}
-                      className="ml-1 underline hover:text-primary transition-colors"
-                    >
-                      upgrade to a paid plan
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
 
           <div className="flex-1 overflow-hidden">
             {currentContent ? (
@@ -913,6 +906,24 @@ export const CodePanel = memo(function CodePanel({
                 }}
                 onMount={(editor, monaco) => {
                   editorInstanceRef.current = editor
+
+                  // Override Cmd+S / Ctrl+S in Monaco to prevent browser default
+                  // and dispatch to the window-level save handler
+                  editor.addCommand(
+                    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+                    () => {
+                      window.dispatchEvent(
+                        new KeyboardEvent('keydown', {
+                          key: 's',
+                          code: 'KeyS',
+                          metaKey: true,
+                          ctrlKey: true,
+                          bubbles: true,
+                          cancelable: true,
+                        })
+                      )
+                    }
+                  )
 
                   if (disableErrorSquiggles) {
                     monaco.editor.setModelMarkers(editor.getModel()!, 'owner', [])
