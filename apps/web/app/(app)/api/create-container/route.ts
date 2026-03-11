@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { projects, convexProjectCredentials } from '@react-native-vibe-code/database'
+import { projects, convexProjectCredentials, projectEnvVars } from '@react-native-vibe-code/database'
 import { Sandbox } from '@e2b/code-interpreter'
 import { connectSandbox } from '@/lib/sandbox-connect'
 import { Octokit } from '@octokit/rest'
@@ -523,6 +523,24 @@ export async function POST(req: NextRequest) {
       })
     } else {
       console.log('[Create Container] No Convex credentials - user can enable via Cloud button')
+    }
+
+    // Inject user-defined environment variables
+    try {
+      const { updateSandboxEnvFile: updateEnv } = await import('@/lib/convex/sandbox-utils')
+      const userEnvVars = await db
+        .select()
+        .from(projectEnvVars)
+        .where(eq(projectEnvVars.projectId, project.id))
+
+      for (const envVar of userEnvVars) {
+        await updateEnv(sandbox, envVar.key, envVar.value)
+      }
+      if (userEnvVars.length > 0) {
+        console.log(`[Create Container] Injected ${userEnvVars.length} user env vars`)
+      }
+    } catch (error) {
+      console.error('[Create Container] Failed to inject user env vars:', error)
     }
 
     // Create GitHub repository for the project

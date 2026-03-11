@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud } from "lucide-react"
+import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud, KeyRound } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import { AssetsPanel } from "@/components/assets-panel"
 import { ProjectsPanel } from "@/components/projects-panel"
 import { BackendPanel } from "@/components/backend-panel"
 import { CloudSidebarPanel } from "@/components/cloud-sidebar-panel"
+import { EnvVarsPanel } from "@/components/env-vars-panel"
 import { UserMenu } from "@/components/user-menu"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -98,6 +99,12 @@ function SidebarNav({
       id: "backend",
       label: "Backend",
       icon: Database,
+      spacer: false,
+    },
+    {
+      id: "envvars",
+      label: "Env Vars",
+      icon: KeyRound,
       spacer: false,
     },
     {
@@ -404,6 +411,18 @@ export function AppSidebar({
               deploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={onCloudEnabled}
               onClose={() => handlePanelChange(null)}
+            />
+          </PanelContent>
+
+          <PanelContent
+            isOpen={activePanel === "envvars"}
+            isFirstOpen={isFirstOpen}
+            isSwitching={isSwitching}
+            onClose={() => handlePanelChange(null)}
+          >
+            <EnvVarsPanel
+              projectId={projectId || ''}
+              sandboxId={sandboxId}
             />
           </PanelContent>
         </div>
