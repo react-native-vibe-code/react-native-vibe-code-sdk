@@ -258,6 +258,15 @@ export const conversationMessages = pgTable('conversation_messages', {
   metadata: text('metadata'), // JSON string for additional data like file operations
 })
 
+export const sandboxSessions = pgTable('sandbox_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  sandboxId: text('sandbox_id').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+})
+
 export const chat = pgTable('Chat', {
   id: uuid('id').primaryKey().notNull().defaultRandom(),
   createdAt: timestamp('createdAt').notNull(),

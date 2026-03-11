@@ -64,6 +64,7 @@
     "@react-native-vibe-code/code-editor": "workspace:*",
     "@react-native-vibe-code/config": "workspace:*",
     "@react-native-vibe-code/convex": "workspace:*",
+    "@react-native-vibe-code/byok": "workspace:*",
     "@react-native-vibe-code/database": "workspace:*",
     "@react-native-vibe-code/error-manager": "workspace:*",
     "@react-native-vibe-code/payments": "workspace:*",

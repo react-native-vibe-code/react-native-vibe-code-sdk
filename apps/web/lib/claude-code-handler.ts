@@ -23,6 +23,7 @@ export interface ClaudeCodeHandlerRequest {
   sandboxId?: string
   claudeModel?: string
   skills?: string[]
+  anthropicKey?: string
 }
 
 export interface ClaudeCodeStreamCallbacks {
@@ -205,6 +206,7 @@ export async function handleClaudeCodeGeneration(
         sessionId: project.conversationId || undefined, // Pass session ID for resumption
         claudeModel: request.claudeModel,
         skills: request.skills,
+        anthropicKey: request.anthropicKey,
       },
       sandbox,
       {

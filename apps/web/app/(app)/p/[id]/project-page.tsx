@@ -324,6 +324,9 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
         selectionData: chatBody.selectionData,
         imageAttachments: (imageAttachments?.length ?? 0) > 0 ? imageAttachments : undefined,
         skills: skills && skills.length > 0 ? skills : undefined,
+        anthropicKey: typeof window !== 'undefined'
+          ? (localStorage.getItem('byok_anthropic_key') || undefined)
+          : undefined,
         messages: messageToSend ? [messageToSend] : [],
       }
 

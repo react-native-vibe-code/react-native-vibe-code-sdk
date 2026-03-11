@@ -5,9 +5,14 @@ import type { Message } from "ai";
 import { ChatMessage as BaseChatMessage, type ChatMessageProps as BaseProps } from "@react-native-vibe-code/chat/components";
 import { ClaudeCodeMessage, GeneratingAppCard } from "@/components/claude-code-message";
 import { RateLimitCard } from "@/components/rate-limit-card";
+import { SandboxLimitCard } from "@/components/sandbox-limit-card";
 import { getSkillById } from "@/lib/skills";
 
-interface ChatMessageProps extends Omit<BaseProps, 'renderRateLimitCard' | 'renderClaudeCodeMessage' | 'renderGeneratingAppCard' | 'isRateLimitMessage' | 'parseRateLimitData' | 'isClaudeCodeMessage' | 'getSkillById'> {}
+interface ChatMessageProps extends Omit<BaseProps,
+  | 'renderRateLimitCard' | 'renderClaudeCodeMessage' | 'renderGeneratingAppCard'
+  | 'isRateLimitMessage' | 'parseRateLimitData' | 'isClaudeCodeMessage' | 'getSkillById'
+  | 'renderSandboxLimitCard' | 'isSandboxLimitMessage' | 'parseSandboxLimitData'
+> {}
 
 // Helper function to detect if message content is a rate limit message
 function isRateLimitMessage(content: string): boolean {
@@ -35,6 +40,26 @@ function parseRateLimitData(content: string): {
     }
   } catch (error) {
     console.error("Failed to parse rate limit data:", error);
+  }
+  return null;
+}
+
+// Helper function to detect sandbox limit messages
+function isSandboxLimitMessage(content: string): boolean {
+  if (!content || typeof content !== "string") return false;
+  return content.includes("__SANDBOX_LIMIT_CARD__");
+}
+
+// Helper function to parse sandbox limit data
+function parseSandboxLimitData(content: string): { sessionsUsed: number; sessionLimit: number } | null {
+  try {
+    const match = content.match(/__SANDBOX_LIMIT_CARD__(.*?)__SANDBOX_LIMIT_CARD__/);
+    if (match && match[1]) {
+      const data = JSON.parse(match[1]);
+      return { sessionsUsed: data.sessionsUsed, sessionLimit: data.sessionLimit };
+    }
+  } catch {
+    // ignore
   }
   return null;
 }
@@ -89,6 +114,11 @@ const PureChatMessage = (props: ChatMessageProps) => {
       parseRateLimitData={parseRateLimitData}
       isClaudeCodeMessage={isClaudeCodeMessage}
       getSkillById={getSkillById}
+      isSandboxLimitMessage={isSandboxLimitMessage}
+      parseSandboxLimitData={parseSandboxLimitData}
+      renderSandboxLimitCard={({ sessionsUsed, sessionLimit }) => (
+        <SandboxLimitCard sessionsUsed={sessionsUsed} sessionLimit={sessionLimit} className="max-w-full" />
+      )}
       renderRateLimitCard={({ reason, usageCount, messageLimit }) => (
         <RateLimitCard
           reason={reason}

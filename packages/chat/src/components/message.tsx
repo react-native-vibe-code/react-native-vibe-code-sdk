@@ -33,6 +33,12 @@ export interface ChatMessageProps {
   isClaudeCodeMessage?: (content: string) => boolean;
   /** Optional function to get skill by ID */
   getSkillById?: (id: string) => { id: string; name: string; icon: React.ComponentType<{ className?: string }> } | null;
+  /** Optional custom renderer for sandbox limit messages */
+  renderSandboxLimitCard?: (data: { sessionsUsed: number; sessionLimit: number }) => ReactNode;
+  /** Optional function to check if message is a sandbox limit message */
+  isSandboxLimitMessage?: (content: string) => boolean;
+  /** Optional function to parse sandbox limit data */
+  parseSandboxLimitData?: (content: string) => { sessionsUsed: number; sessionLimit: number } | null;
 }
 
 // Helper function to get edit data from message annotations
@@ -144,6 +150,9 @@ const PureChatMessage = ({
   parseRateLimitData: parseRateLimit,
   isClaudeCodeMessage: checkIsClaudeCodeMessage,
   getSkillById,
+  renderSandboxLimitCard,
+  isSandboxLimitMessage: checkIsSandboxLimitMessage,
+  parseSandboxLimitData: parseSandboxLimit,
 }: ChatMessageProps) => {
   // Default implementations for optional functions
   const defaultIsRateLimitMessage = (content: string) => content?.includes("__RATE_LIMIT_CARD__");
@@ -161,7 +170,17 @@ const PureChatMessage = ({
     return content.includes("📝 Message") || content.includes("Streaming:");
   };
 
+  const defaultIsSandboxLimitMessage = (content: string) => content?.includes('__SANDBOX_LIMIT_CARD__');
+  const defaultParseSandboxLimitData = (content: string) => {
+    try {
+      const match = content.match(/__SANDBOX_LIMIT_CARD__(.*?)__SANDBOX_LIMIT_CARD__/);
+      if (match && match[1]) return JSON.parse(match[1]);
+    } catch {}
+    return null;
+  };
+
   const isRateLimit = (checkIsRateLimitMessage || defaultIsRateLimitMessage)(message.content);
+  const isSandboxLimit = (checkIsSandboxLimitMessage || defaultIsSandboxLimitMessage)(message.content);
   const isClaudeCode = (checkIsClaudeCodeMessage || defaultIsClaudeCodeMessage)(message.content);
   const editData = getEditDataFromMessage(message);
 
@@ -202,6 +221,13 @@ const PureChatMessage = ({
             "items-start": message.role === "assistant" && showGeneratingCard,
           })}
         >
+          {/* Sandbox Limit Card */}
+          {isSandboxLimit && message.role === "assistant" && renderSandboxLimitCard && (() => {
+            const data = (parseSandboxLimit || defaultParseSandboxLimitData)(message.content);
+            if (data) return renderSandboxLimitCard({ sessionsUsed: data.sessionsUsed, sessionLimit: data.sessionLimit });
+            return null;
+          })()}
+
           {/* Rate Limit Card */}
           {isRateLimit && message.role === "assistant" && renderRateLimitCard && (() => {
             const rateLimitData = (parseRateLimit || defaultParseRateLimitData)(message.content);
@@ -227,7 +253,7 @@ const PureChatMessage = ({
           )}
 
           {/* Regular Message (Simple Text) */}
-          {!isRateLimit && !isClaudeCode && (
+          {!isRateLimit && !isSandboxLimit && !isClaudeCode && (
             <div
               className={cn("rounded-lg p-3", {
                 "bg-transparent border dark:border-white border-gray-400 max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":

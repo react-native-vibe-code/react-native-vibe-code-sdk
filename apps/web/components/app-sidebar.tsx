@@ -20,6 +20,7 @@ import { ProjectsPanel } from "@/components/projects-panel"
 import { BackendPanel } from "@/components/backend-panel"
 import { CloudSidebarPanel } from "@/components/cloud-sidebar-panel"
 import { EnvVarsPanel } from "@/components/env-vars-panel"
+import { ByokPanel } from "@/components/byok-panel"
 import { UserMenu } from "@/components/user-menu"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -93,6 +94,12 @@ function SidebarNav({
       id: "cloud",
       label: "Cloud",
       icon: Cloud,
+      spacer: false,
+    },
+    {
+      id: "byok",
+      label: "API Key",
+      icon: KeyRound,
       spacer: false,
     },
     {
@@ -423,6 +430,18 @@ export function AppSidebar({
             <EnvVarsPanel
               projectId={projectId || ''}
               sandboxId={sandboxId}
+            />
+          </PanelContent>
+
+          <PanelContent
+            isOpen={activePanel === "byok"}
+            isFirstOpen={isFirstOpen}
+            isSwitching={isSwitching}
+            onClose={() => handlePanelChange(null)}
+            isBottomOption={false}
+          >
+            <ByokPanel
+              onClose={() => handlePanelChange(null)}
             />
           </PanelContent>
         </div>

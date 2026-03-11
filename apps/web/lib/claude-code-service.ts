@@ -30,6 +30,7 @@ export interface AppGenerationRequest {
   sessionId?: string  // Claude SDK session ID for resumption
   claudeModel?: string  // Model ID for Claude (e.g., claude-sonnet-4-5-20250929)
   skills?: string[]  // Selected AI skills (e.g., 'anthropic-chat', 'openai-dalle-3')
+  anthropicKey?: string  // BYOK: user-provided Anthropic API key
 }
 
 export interface AppGenerationResponse {
@@ -265,7 +266,7 @@ export class ClaudeCodeService {
           {
             background: true as const,
             envs: {
-              ANTHROPIC_API_KEY: globalThis.process.env.ANTHROPIC_API_KEY || '',
+              ANTHROPIC_API_KEY: request.anthropicKey || globalThis.process.env.ANTHROPIC_API_KEY || '',
             },
             timeoutMs: sandboxTimeoutMs, // Match sandbox lifetime to avoid premature gRPC deadline
             onStdout: (data: string) => {
