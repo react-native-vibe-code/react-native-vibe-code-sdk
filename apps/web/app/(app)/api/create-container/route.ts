@@ -11,6 +11,7 @@ import { updateAppConfigWithName } from '@react-native-vibe-code/publish'
 import { provisionManagedConvexProject } from '@/lib/convex/management-api'
 import { pusherServer } from '@/lib/pusher'
 import { restoreConvexEnvToSandbox } from '@/lib/convex/sandbox-utils'
+import { recordSandboxSession } from '@react-native-vibe-code/byok'
 
 export const maxDuration = 300 // 5 minutes for container creation
 
@@ -399,6 +400,17 @@ export async function POST(req: NextRequest) {
     })
 
     console.log(`Created new sandbox: ${sandbox.sandboxId}`)
+
+    // Record sandbox session for BYOK usage tracking (new sandboxes only)
+    try {
+      if (userID && sandbox?.sandboxId) {
+        await recordSandboxSession(userID, sandbox.sandboxId)
+        console.log('[Create Container] Recorded sandbox session for user:', userID)
+      }
+    } catch (sessionErr) {
+      // Non-fatal — don't fail sandbox creation if tracking fails
+      console.error('[Create Container] Failed to record sandbox session:', sessionErr)
+    }
 
     // Generate app name from first message
     let appName = 'my-app' // Default fallback

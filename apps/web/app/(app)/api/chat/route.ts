@@ -6,6 +6,7 @@ import { corsHeaders, handleCorsOptions } from '@/lib/cors'
 import { dispatchToAgent } from '@/lib/agent-dispatcher'
 import type { AgentType } from '@/lib/agent-dispatcher'
 import { getPusherServer } from '@react-native-vibe-code/pusher/server'
+import { canUserCreateSandbox } from '@react-native-vibe-code/byok'
 
 type ClaudeCodeResponse = {
   type: 'message' | 'completion' | 'error'
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     skills,
     agentType,
     source,
+    anthropicKey,
   }: {
     messages: UIMessage[]
     projectId: string
@@ -43,6 +45,7 @@ export async function POST(req: Request) {
     skills?: string[]
     agentType?: AgentType
     source?: string
+    anthropicKey?: string
   } = await req.json()
 
   // Mobile (remote-control) requests never include userId — they only send projectId + messages
@@ -100,8 +103,8 @@ export async function POST(req: Request) {
   console.log('[Chat Route] lastUserMessage:', lastUserMessage)
   console.log('[Chat Route] lastUserMessageId:', lastUserMessageId)
 
-  // Check message usage limits before processing
-  if (userId && lastUserMessage) {
+  // Check message usage limits before processing (skip for BYOK users)
+  if (userId && lastUserMessage && !anthropicKey) {
     console.log('[Chat Route] Checking message usage limits for user:', userId)
     const usageCheck = await canUserSendMessage(userId)
 
@@ -233,6 +236,62 @@ export async function POST(req: Request) {
         'Content-Encoding': 'none',
       }
     })
+  }
+
+  // Check sandbox hours for BYOK users
+  if (anthropicKey && userId) {
+    const sandboxCheck = await canUserCreateSandbox(userId)
+    if (!sandboxCheck.canCreate) {
+      const sandboxLimitData = {
+        type: 'SANDBOX_LIMIT_EXCEEDED',
+        sessionsUsed: sandboxCheck.sessionsUsed,
+        sessionLimit: sandboxCheck.sessionLimit,
+      }
+      const sandboxLimitMessage = `__SANDBOX_LIMIT_CARD__${JSON.stringify(sandboxLimitData)}__SANDBOX_LIMIT_CARD__`
+
+      const result = await streamText({
+        model: {
+          specificationVersion: 'v1',
+          doStream: async () => {
+            const chunks = sandboxLimitMessage.split(' ')
+            let index = 0
+            return {
+              stream: new ReadableStream({
+                async start(controller) {
+                  const sendChunk = () => {
+                    if (index < chunks.length) {
+                      const chunk = chunks[index] + (index < chunks.length - 1 ? ' ' : '')
+                      controller.enqueue({ type: 'text-delta', textDelta: chunk })
+                      index++
+                      setTimeout(sendChunk, 50)
+                    } else {
+                      controller.enqueue({
+                        type: 'finish',
+                        finishReason: 'stop',
+                        usage: { promptTokens: 0, completionTokens: chunks.length, totalTokens: chunks.length },
+                      })
+                      controller.close()
+                    }
+                  }
+                  sendChunk()
+                },
+              }),
+            }
+          },
+        } as any,
+        messages: ([
+          ...messages,
+          { id: crypto.randomUUID(), role: 'assistant' as const, content: sandboxLimitMessage },
+        ] as any),
+      })
+      return result.toDataStreamResponse({
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Encoding': 'none',
+          ...corsHeaders,
+        },
+      })
+    }
   }
 
   // Increment message usage count before processing
@@ -411,6 +470,7 @@ export async function POST(req: Request) {
                         imageAttachments: finalImageAttachments,
                         skills,
                         agentType,
+                        anthropicKey,
                       },
                       {
                         onMessage: (message: string) => {

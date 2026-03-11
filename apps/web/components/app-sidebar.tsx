@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud } from "lucide-react"
+import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud, KeyRound } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import { AssetsPanel } from "@/components/assets-panel"
 import { ProjectsPanel } from "@/components/projects-panel"
 import { BackendPanel } from "@/components/backend-panel"
 import { CloudSidebarPanel } from "@/components/cloud-sidebar-panel"
+import { ByokPanel } from "@/components/byok-panel"
 import { UserMenu } from "@/components/user-menu"
 import { Session } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -92,6 +93,12 @@ function SidebarNav({
       id: "cloud",
       label: "Cloud",
       icon: Cloud,
+      spacer: false,
+    },
+    {
+      id: "byok",
+      label: "API Key",
+      icon: KeyRound,
       spacer: false,
     },
     {
@@ -403,6 +410,18 @@ export function AppSidebar({
               cloudEnabled={cloudEnabled || false}
               deploymentUrl={cloudDeploymentUrl}
               onCloudEnabled={onCloudEnabled}
+              onClose={() => handlePanelChange(null)}
+            />
+          </PanelContent>
+
+          <PanelContent
+            isOpen={activePanel === "byok"}
+            isFirstOpen={isFirstOpen}
+            isSwitching={isSwitching}
+            onClose={() => handlePanelChange(null)}
+            isBottomOption={false}
+          >
+            <ByokPanel
               onClose={() => handlePanelChange(null)}
             />
           </PanelContent>

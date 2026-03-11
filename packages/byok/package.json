@@ -1,0 +1,31 @@
+{
+  "name": "@react-native-vibe-code/byok",
+  "version": "0.0.1",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-vibe-code/database": "workspace:*",
+    "@anthropic-ai/sdk": "^0.36.3",
+    "drizzle-orm": "^0.37.0"
+  },
+  "devDependencies": {
+    "@react-native-vibe-code/tsconfig": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "^5.5.4"
+  }
+}
