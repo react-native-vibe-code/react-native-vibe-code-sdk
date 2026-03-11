@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { CheckCircle2, AlertTriangle, Loader2, X, KeyRound } from 'lucide-react'
+import { CheckCircle2, X, KeyRound } from 'lucide-react'
 
 const STORAGE_KEY = 'byok_anthropic_key'
 
@@ -16,8 +16,6 @@ interface ByokPanelProps {
 export function ByokPanel({ onClose }: ByokPanelProps) {
   const [key, setKey] = useState('')
   const [savedKey, setSavedKey] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle')
-  const [error, setError] = useState<string | null>(null)
   const [usage, setUsage] = useState<{ sessionsUsed: number; sessionLimit: number; hoursUsed: number; hoursLimit: number } | null>(null)
 
   useEffect(() => {
@@ -33,34 +31,16 @@ export function ByokPanel({ onClose }: ByokPanelProps) {
       .catch(() => {})
   }, [savedKey])
 
-  async function handleSave() {
+  function handleSave() {
     if (!key.trim()) return
-    setStatus('validating')
-    setError(null)
-
-    const res = await fetch('/api/byok/validate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: key.trim() }),
-    })
-    const data = await res.json()
-
-    if (data.valid) {
-      localStorage.setItem(STORAGE_KEY, key.trim())
-      setSavedKey(key.trim())
-      setKey('')
-      setStatus('valid')
-    } else {
-      setStatus('invalid')
-      setError(data.error || 'Invalid key')
-    }
+    localStorage.setItem(STORAGE_KEY, key.trim())
+    setSavedKey(key.trim())
+    setKey('')
   }
 
   function handleRemove() {
     localStorage.removeItem(STORAGE_KEY)
     setSavedKey(null)
-    setStatus('idle')
-    setError(null)
     setUsage(null)
   }
 
@@ -72,7 +52,10 @@ export function ByokPanel({ onClose }: ByokPanelProps) {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Add your Anthropic API key to use the service for free. Your key is stored locally in your browser and never sent to our servers beyond validation.
+        Add your Anthropic API key to use the service for free without a subscription.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Your key is stored locally in your browser. We validate it to check it works and then whenever you send a message it is sent with the API key to the sandbox where the code agent will use it directly. Keys are never stored on database.
       </p>
 
       {savedKey ? (
@@ -117,24 +100,13 @@ export function ByokPanel({ onClose }: ByokPanelProps) {
               type="password"
               placeholder="sk-ant-..."
               value={key}
-              onChange={e => { setKey(e.target.value); setStatus('idle'); setError(null) }}
+              onChange={e => setKey(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
             />
           </div>
 
-          {status === 'invalid' && error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button onClick={handleSave} disabled={!key.trim() || status === 'validating'} className="w-full">
-            {status === 'validating' ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Validating...</>
-            ) : (
-              'Save & Validate'
-            )}
+          <Button onClick={handleSave} disabled={!key.trim()} className="w-full">
+            Save to Local Storage
           </Button>
         </div>
       )}

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud, KeyRound } from "lucide-react"
+import { Image, FolderOpen, Database, ChevronLeft, ChevronRight, X, MessageSquare, Cloud, KeyRound, Settings2 } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -111,7 +111,7 @@ function SidebarNav({
     {
       id: "envvars",
       label: "Env Vars",
-      icon: KeyRound,
+      icon: Settings2,
       spacer: false,
     },
     {
