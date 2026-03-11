@@ -80,10 +80,10 @@ export function ByokPanel({ onClose }: ByokPanelProps) {
 
       {savedKey ? (
         <div className="space-y-3">
-          <Alert className="border-green-400/50 bg-green-50 dark:bg-green-900/20">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-700 dark:text-green-300">
-              API key is active. Messages are using your key.
+          <Alert className="border-green-400/50 bg-green-50 dark:bg-green-900/20 justify-center">
+            <AlertDescription className="text-green-700 dark:text-green-300 items-center flex flex-row">
+            <CheckCircle2 className="h-4 w-4 text-green-600 mr-2" />
+              API key is active. Messages are using your key
             </AlertDescription>
           </Alert>
 
