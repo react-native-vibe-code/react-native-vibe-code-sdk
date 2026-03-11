@@ -294,16 +294,20 @@ export async function POST(req: Request) {
     }
   }
 
-  // Increment message usage count before processing
-  console.log('[Chat Route] Incrementing message usage for user:', userId)
-  const usageResult = await incrementMessageUsage(userId)
+  // Increment message usage count before processing (skip for BYOK users)
+  if (!anthropicKey) {
+    console.log('[Chat Route] Incrementing message usage for user:', userId)
+    const usageResult = await incrementMessageUsage(userId)
 
-  if (!usageResult.success) {
-    console.error('[Chat Route] Failed to increment message usage')
-    return new Response('Failed to track message usage', { status: 500 })
+    if (!usageResult.success) {
+      console.error('[Chat Route] Failed to increment message usage')
+      return new Response('Failed to track message usage', { status: 500 })
+    }
+
+    console.log('[Chat Route] Message usage incremented. New count:', usageResult.newUsageCount, 'Remaining:', usageResult.remainingMessages)
+  } else {
+    console.log('[Chat Route] BYOK user — skipping message usage increment')
   }
-
-  console.log('[Chat Route] Message usage incremented. New count:', usageResult.newUsageCount, 'Remaining:', usageResult.remainingMessages)
 
   // Call claude-code handler directly to get the streaming response
   let claudeCodeResult: ClaudeCodeResponse | null = null
