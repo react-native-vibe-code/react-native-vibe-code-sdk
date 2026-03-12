@@ -98,7 +98,7 @@ function SidebarNav({
     },
     {
       id: "byok",
-      label: "API Key",
+      label: "BYOK",
       icon: KeyRound,
       spacer: false,
     },

@@ -167,6 +167,11 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
   const [isUserSettingsModalOpen, setIsUserSettingsModalOpen] = useState(false)
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false)
+  const [isByokEnabled, setIsByokEnabled] = useState(false)
+
+  useEffect(() => {
+    setIsByokEnabled(!!localStorage.getItem('byok_anthropic_key'))
+  }, [])
 
   // Mobile sidebar panel state
   const [mobileSidebarPanel, setMobileSidebarPanel] = useState<string | null>(null)
@@ -2595,6 +2600,11 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                 <TabsTrigger value="chat">Chat</TabsTrigger>
                 <TabsTrigger value="panel" disabled={isSandboxRecovering}>History</TabsTrigger>
               </TabsList>
+              {isByokEnabled && (
+                <div className="px-4 py-1.5 bg-green-50 dark:bg-green-900/20 border-b text-xs text-green-700 dark:text-green-300 text-center font-medium">
+                  BYOK Enabled
+                </div>
+              )}
               <TabsContent value="chat" className="flex-1 m-0 overflow-hidden flex flex-col relative">
                 <ChatPanel
                   key={chatKey}
