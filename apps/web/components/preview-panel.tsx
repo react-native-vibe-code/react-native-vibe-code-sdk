@@ -389,7 +389,7 @@ export function PreviewPanel({
       currentProject.isPublic &&
       !screenshotTimeoutRef.current
     ) {
-      console.log('[PreviewPanel] Scheduling screenshot capture in 60 seconds for public project...')
+      console.log('[PreviewPanel] Scheduling screenshot capture in 3 minutes for public project...')
       setHasTriggeredScreenshots(true)
 
       // Store project data in closure to avoid stale references
@@ -429,8 +429,8 @@ export function PreviewPanel({
         screenshotTimeoutRef.current = null
 
         if (!success) {
-          // Schedule a retry in 120 seconds: first check DB, only retry if still missing
-          console.log('[PreviewPanel] Screenshot failed, scheduling retry in 120 seconds...')
+          // Schedule a retry in 60 seconds: first check DB, only retry if still missing
+          console.log('[PreviewPanel] Screenshot failed, scheduling retry in 60 seconds...')
           screenshotRetryRef.current = setTimeout(async () => {
             screenshotRetryRef.current = null
             try {
@@ -448,9 +448,9 @@ export function PreviewPanel({
             }
             console.log('[PreviewPanel] Screenshots still missing, retrying...')
             await triggerScreenshots()
-          }, 120000)
+          }, 60000)
         }
-      }, 60000) // 60 seconds - wait for app to fully initialize
+      }, 180000) // 3 minutes - wait for app to fully initialize
     }
   }, [hasTriggeredScreenshots, isIframeLoading, currentProject, userId, onProjectUpdate])
 
