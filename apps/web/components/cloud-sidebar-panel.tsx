@@ -13,8 +13,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Database, Zap, Cloud, HardDrive, CheckCircle2, Loader2, ExternalLink } from 'lucide-react'
+import { Database, Zap, Cloud, HardDrive, CheckCircle2, Loader2, ExternalLink, LayoutDashboard } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConvexDashboardModal } from '@/components/convex-dashboard-modal'
 
 interface CloudSidebarPanelProps {
   projectId?: string
@@ -33,6 +34,7 @@ export function CloudSidebarPanel({
 }: CloudSidebarPanelProps) {
   const [isEnabling, setIsEnabling] = useState(false)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(false)
 
   const handleEnableCloud = async () => {
     if (!projectId) {
@@ -115,6 +117,15 @@ export function CloudSidebarPanel({
                   </div>
                 )}
 
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowDashboard(true)}
+                >
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Open Convex Dashboard
+                </Button>
+
                 <p className="text-sm text-muted-foreground">
                   Your app now has access to a real-time database. The AI will use Convex for all data persistence and backend logic.
                 </p>
@@ -185,6 +196,12 @@ export function CloudSidebarPanel({
           </div>
         </div>
       </div>
+
+      <ConvexDashboardModal
+        open={showDashboard}
+        onOpenChange={setShowDashboard}
+        projectId={projectId}
+      />
 
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
