@@ -31,3 +31,12 @@
 - Wizard Step 1 fetches this on modal open to pre-fill the Bundle Identifier field
 
 ---
+
+
+### expo-mcp package setup
+- Package lives in `packages/expo-mcp/`, name `@react-native-vibe-code/expo-mcp`
+- Uses `mcp-handler` (not `@vercel/mcp-adapter`) per Vercel docs
+- Exposed via `apps/web/app/api/mcp/route.ts` with basePath `/api`
+- Better Auth token verification via `auth.api.getSession` with bearer token as authorization header
+- SDK docs fetched from GitHub raw: `https://raw.githubusercontent.com/expo/expo/main/docs/pages/versions/v55.0.0/sdk/{slug}.mdx`
+- Module list hardcoded from v55.0.0 directory
