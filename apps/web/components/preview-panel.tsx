@@ -61,6 +61,9 @@ interface PreviewPanelProps {
   // External trigger to open Publish Options modal (used by mobile menu)
   openPublishOptions?: boolean
   onOpenPublishOptionsChange?: (open: boolean) => void
+  // Recovery coordination from useNgrokHealthCheck (US-002)
+  isRecoveryActive?: boolean
+  isInRecoveryCooldown?: () => boolean
 }
 
 export function PreviewPanel({
@@ -88,6 +91,8 @@ export function PreviewPanel({
   session,
   openPublishOptions: externalOpenPublishOptions,
   onOpenPublishOptionsChange,
+  isRecoveryActive = false,
+  isInRecoveryCooldown,
 }: PreviewPanelProps) {
   const isMobile = useIsMobile()
   const { isDevMode } = useDevMode()
@@ -96,15 +101,6 @@ export function PreviewPanel({
     'mobile',
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isSandboxDown, setIsSandboxDown] = useState(false)
-  const [isServerDown, setIsServerDown] = useState(false)
-  const [isRestartingServer, setIsRestartingServer] = useState(false)
-  const [isSandboxInitializing, setIsSandboxInitializing] = useState(false)
-  const [isRecreatingSandbox, setIsRecreatingSandbox] = useState(false)
-  const [recreationFailed, setRecreationFailed] = useState(false) // Stops retries after max attempts
-  const recreationAttemptsRef = useRef(0)
-  const isRecreatingSandboxRef = useRef(false) // Ref to avoid stale closures in health check
-  const maxRecreationRetries = 3
   const [isIframeLoading, setIsIframeLoading] = useState(true)
   const [iframeKey, setIframeKey] = useState(0) // Key to force iframe remount
   const [showAppStoreSubmissions, setShowAppStoreSubmissions] = useState(false)
@@ -167,124 +163,7 @@ export function PreviewPanel({
     window.location.reload()
   }
 
-  const handleRestartServer = async () => {
-    if (!projectId || !sandboxId || isRestartingServer) return
 
-    // console.log('[PreviewPanel] Restarting server for sandbox:', sandboxId)
-    setIsRestartingServer(true)
-
-    try {
-      const userID = userId
-
-      const response = await fetch('/api/restart-server', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId,
-          userID,
-          sandboxId,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        // console.log('[PreviewPanel] Server restarted successfully')
-        toast.success('Server restarted successfully')
-        setIsServerDown(false)
-
-        // Reload the iframe after a short delay
-        setTimeout(() => {
-          const iframes = document.querySelectorAll('iframe')
-          iframes.forEach(iframe => {
-            if (iframe.src.includes(sandboxId)) {
-              iframe.src = iframe.src
-            }
-          })
-        }, 2000)
-      } else {
-        console.error('[PreviewPanel] Failed to restart server:', data.error)
-        // toast.error(`Failed to restart server: ${data.error}`)
-      }
-    } catch (error) {
-      console.error('[PreviewPanel] Error restarting server:', error)
-      // toast.error('Failed to restart server')
-    } finally {
-      setIsRestartingServer(false)
-    }
-  }
-
-  // Handle sandbox recreation when sandbox container is gone
-  const handleRecreateSandbox = async () => {
-    if (!projectId || !userId || isRecreatingSandboxRef.current) return
-
-    // Check if we've exceeded max retries
-    if (recreationAttemptsRef.current >= maxRecreationRetries) {
-      console.log(`[PreviewPanel] Max recreation attempts (${maxRecreationRetries}) reached, stopping auto-retry`)
-      setRecreationFailed(true)
-      setIsSandboxInitializing(false)
-      return
-    }
-
-    recreationAttemptsRef.current++
-    const attempt = recreationAttemptsRef.current
-    console.log(`[PreviewPanel] Recreating sandbox for project: ${projectId} (attempt ${attempt}/${maxRecreationRetries})`)
-
-    setIsRecreatingSandbox(true)
-    isRecreatingSandboxRef.current = true
-    setIsSandboxInitializing(true)
-
-    try {
-      const response = await fetch('/api/resume-container', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId,
-          userID: userId,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        console.log('[PreviewPanel] Sandbox recreated successfully:', data)
-        toast.success('Sandbox recreated successfully')
-        setIsSandboxDown(false)
-        setIsServerDown(false)
-        recreationAttemptsRef.current = 0
-        setRecreationFailed(false)
-
-        // Reload the page to get fresh URLs and state
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
-      } else {
-        console.error(`[PreviewPanel] Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries}):`, data.error)
-        if (attempt >= maxRecreationRetries) {
-          toast.error('Failed to recreate sandbox after multiple attempts. Please try refreshing the page.')
-          setRecreationFailed(true)
-        } else {
-          toast.error(`Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries})`)
-        }
-      }
-    } catch (error) {
-      console.error(`[PreviewPanel] Error recreating sandbox (attempt ${attempt}/${maxRecreationRetries}):`, error)
-      if (attempt >= maxRecreationRetries) {
-        toast.error('Failed to recreate sandbox after multiple attempts. Please try refreshing the page.')
-        setRecreationFailed(true)
-      } else {
-        toast.error(`Failed to recreate sandbox (attempt ${attempt}/${maxRecreationRetries})`)
-      }
-    } finally {
-      setIsRecreatingSandbox(false)
-      isRecreatingSandboxRef.current = false
-      setIsSandboxInitializing(false)
-    }
-  }
 
   // Calculate preview URL early
   const hasContent = code || appData?.code || result?.url
@@ -314,11 +193,14 @@ export function PreviewPanel({
   }
 
   // Check if the preview URL is accessible and retry if connection was reset
+  // Gated behind recovery state to avoid competing with useNgrokHealthCheck (US-002)
   const checkConnectionAndRetry = async () => {
     if (!actualPreviewUrl || connectionRetryCount >= maxConnectionRetries || !sandboxId) return
 
+    // Skip if recovery is active or in cooldown — useNgrokHealthCheck handles it
+    if (isRecoveryActive || isInRecoveryCooldown?.()) return
+
     try {
-      // Use server-side check which is more reliable than client-side fetch
       const response = await fetch('/api/check-expo-server', {
         method: 'POST',
         headers: {
@@ -333,13 +215,11 @@ export function PreviewPanel({
       const data = await response.json()
 
       if (data.isAlive) {
-        // Connection is fine - reset retry count
         if (connectionRetryCount > 0) {
           console.log('[PreviewPanel] Connection restored, resetting retry count')
           setConnectionRetryCount(0)
         }
       } else {
-        // Connection failed - likely "connection was reset" scenario
         throw new Error('Server not responding')
       }
     } catch (error) {
@@ -349,9 +229,7 @@ export function PreviewPanel({
         const nextRetryCount = connectionRetryCount + 1
         setConnectionRetryCount(nextRetryCount)
         setIsIframeLoading(true)
-        // Toggle the key to force iframe remount
         setIframeKey(prev => prev + 1)
-        toast.info(`Reconnecting to preview... (attempt ${nextRetryCount}/${maxConnectionRetries})`)
       } else {
         console.log('[PreviewPanel] Max retries reached, stopping auto-retry')
       }
@@ -360,7 +238,7 @@ export function PreviewPanel({
 
   // Monitor iframe load and check connection after it loads
   useEffect(() => {
-    if (!isIframeLoading && actualPreviewUrl && !isSandboxDown && sandboxId) {
+    if (!isIframeLoading && actualPreviewUrl && sandboxId) {
       // Wait a bit after iframe "loads" to verify connection is actually working
       const checkTimeout = setTimeout(() => {
         checkConnectionAndRetry()
@@ -368,7 +246,7 @@ export function PreviewPanel({
 
       return () => clearTimeout(checkTimeout)
     }
-  }, [isIframeLoading, actualPreviewUrl, isSandboxDown, connectionRetryCount, sandboxId])
+  }, [isIframeLoading, actualPreviewUrl, connectionRetryCount, sandboxId])
 
   // Reset retry count when URL changes
   useEffect(() => {
@@ -485,10 +363,9 @@ export function PreviewPanel({
 
   // Show loading if:
   // 1. isGenerating is true (container is being created/resumed)
-  // 2. isSandboxInitializing is true (sandbox is starting up)
-  // 3. result?.recreated is true (sandbox was just recreated)
+  // 2. result?.recreated is true (sandbox was just recreated)
   // Note: We show loading even if we have a URL because it might be stale
-  let isLoading = isGenerating || isSandboxInitializing || result?.recreated
+  let isLoading = isGenerating || result?.recreated
   // isLoading = false // DEV: testing expo local
 
   // Clear the recreated flag after some time
@@ -504,191 +381,8 @@ export function PreviewPanel({
     }
   }, [result?.recreated])
 
-  const pingSandbox = async (): Promise<boolean> => {
-    try {
-      if (!sandboxId) {
-        // console.error('[PreviewPanel] No sandbox ID available')
-        return false
-      }
-
-      // Check if the sandbox container is alive using the E2B SDK
-      const response = await fetch('/api/check-sandbox', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sandboxId }),
-      })
-
-      if (!response.ok) {
-        return false
-      }
-
-      const data = await response.json()
-      return data.isAlive
-    } catch (error) {
-      // console.error('[PreviewPanel] Error checking sandbox:', error)
-      return false
-    }
-  }
-
-  const checkExpoServer = async (ngrokUrl: string): Promise<boolean> => {
-    try {
-      // console.log('[PreviewPanel] Checking Expo server at:', ngrokUrl, 'with sandboxId:', sandboxId)
-
-      const response = await fetch('/api/check-expo-server', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: ngrokUrl,
-          sandboxId: sandboxId  // Pass sandboxId for direct port check in sandbox
-        }),
-      })
-
-      if (!response.ok) {
-        // console.log('[PreviewPanel] API request failed')
-        return false
-      }
-
-      const data = await response.json()
-      // console.log('[PreviewPanel] Expo server check result:', data)
-      return data.isAlive
-    } catch (error) {
-      // console.error('[PreviewPanel] Error checking Expo server:', error)
-      return false
-    }
-  }
-
-  // CONSOLIDATED HEALTH CHECK - Single polling mechanism for all checks
-  // Uses a ref to track iframe load state without causing effect re-runs
-  const isIframeLoadedRef = useRef(false)
-  useEffect(() => {
-    isIframeLoadedRef.current = !isIframeLoading
-  }, [isIframeLoading])
-
-  useEffect(() => {
-    if (!actualPreviewUrl || !sandboxId) return
-
-    let checkCount = 0
-    let consecutiveSandboxFailures = 0
-    let consecutiveExpoFailures = 0
-    let abortController: AbortController | null = null
-
-    const checkHealth = async () => {
-      checkCount++
-
-      // Abort any pending requests
-      if (abortController) {
-        abortController.abort()
-      }
-      abortController = new AbortController()
-
-      try {
-        // 1. Check if sandbox container is alive
-        const isAlive = await pingSandbox()
-        setIsSandboxDown(!isAlive)
-
-        if (!isAlive && sandboxId) {
-          consecutiveSandboxFailures++
-
-          // If the iframe is loaded and working, the user can see the app — don't take destructive action
-          if (isIframeLoadedRef.current) {
-            console.log('[PreviewPanel] Sandbox ping failed but iframe is loaded — skipping recreation')
-            return
-          }
-
-          // Only trigger recreation after 3 consecutive failures to avoid false positives
-          if (consecutiveSandboxFailures < 3) {
-            console.log(`[PreviewPanel] Sandbox ping failed (${consecutiveSandboxFailures}/3), waiting for more failures before acting`)
-            return
-          }
-
-          console.log('[PreviewPanel] Sandbox is down after 3 consecutive failures, checking if recreation should be attempted')
-
-          // Only trigger if not already recreating AND haven't exceeded max retries
-          if (!isRecreatingSandboxRef.current && projectId && userId && recreationAttemptsRef.current < maxRecreationRetries) {
-            handleRecreateSandbox()
-          } else if (recreationAttemptsRef.current >= maxRecreationRetries) {
-            console.log('[PreviewPanel] Skipping recreation - max retries exceeded')
-          }
-        } else if (isAlive) {
-          consecutiveSandboxFailures = 0
-          setIsSandboxInitializing(false)
-          // Sandbox came back - reset recreation state
-          if (recreationAttemptsRef.current > 0) {
-            recreationAttemptsRef.current = 0
-            setRecreationFailed(false)
-          }
-
-          // 2. Check Expo server if we have ngrokUrl
-          const ngrokUrl = (result as any)?.ngrokUrl
-          if (ngrokUrl) {
-            const expoServerAlive = await checkExpoServer(ngrokUrl)
-
-            if (!expoServerAlive) {
-              consecutiveExpoFailures++
-
-              // If iframe is loaded, the app is visible to user — don't restart
-              if (isIframeLoadedRef.current) {
-                console.log('[PreviewPanel] Expo server check failed but iframe is loaded — skipping restart')
-                return
-              }
-
-              // Only act after 3 consecutive failures
-              if (consecutiveExpoFailures >= 3 && !isServerDown) {
-                setIsServerDown(true)
-                if (!isRestartingServer && projectId && sandboxId) {
-                  handleRestartServer()
-                }
-              }
-            } else {
-              consecutiveExpoFailures = 0
-              if (isServerDown) {
-                setIsServerDown(false)
-              }
-            }
-          }
-        }
-      } catch (error) {
-        // Ignore errors during health checks
-      }
-    }
-
-    // Initial check — wait 20s to give the app time to fully initialize
-    const initialTimeout = setTimeout(checkHealth, 20000)
-
-    // Polling: every 30s for first few checks, then every 60s
-    const getInterval = () => {
-      if (checkCount < 3) return 30000  // First 3 checks: every 30s
-      return 60000                       // After that: every 60s
-    }
-
-    let interval: ReturnType<typeof setInterval>
-    const scheduleNext = () => {
-      interval = setInterval(() => {
-        checkHealth()
-        // Reschedule with new interval if needed
-        if (checkCount === 3) {
-          clearInterval(interval)
-          scheduleNext()
-        }
-      }, getInterval())
-    }
-
-    scheduleNext()
-
-    return () => {
-      clearTimeout(initialTimeout)
-      clearInterval(interval)
-      if (abortController) {
-        abortController.abort()
-      }
-    }
-    // Note: isRecreatingSandbox intentionally excluded - using ref instead to prevent
-    // the effect from re-triggering (which was causing an infinite retry loop)
-  }, [actualPreviewUrl, sandboxId, result, projectId, userId, isRestartingServer, isServerDown])
+  // Health checks are now centralized in useNgrokHealthCheck (US-002)
+  // PreviewPanel no longer independently polls sandbox/Expo health
 
   const testToast = () => {
     toast.success('Sonner is working!', {
@@ -909,52 +603,13 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
                 <p className="text-lg font-medium mb-2">
                   {result?.recreated
                     ? 'Recreating Sandbox'
-                    : isSandboxInitializing
-                    ? 'Initializing Sandbox'
                     : 'Generating Preview'}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {result?.recreated
                     ? 'Cloning repository and setting up environment...'
-                    : isSandboxInitializing
-                    ? 'Setting up the sandbox environment...'
                     : 'This may take a minute or two...'}
                 </p>
-              </div>
-            </div>
-          )}
-          {/* Recreation failed overlay - shown when max retries exhausted */}
-          {recreationFailed && !isLoading && (
-            <div className="absolute inset-0 z-50 h-full flex min-w-full items-center justify-center bg-background">
-              <div className="text-center max-w-md px-4">
-                <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-                  <RefreshCw className="h-6 w-6 text-destructive" />
-                </div>
-                <p className="text-lg font-medium mb-2">Sandbox Unavailable</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Failed to recreate the sandbox after {maxRecreationRetries} attempts.
-                </p>
-                <div className="flex gap-2 justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      recreationAttemptsRef.current = 0
-                      setRecreationFailed(false)
-                      handleRecreateSandbox()
-                    }}
-                  >
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Try Again
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => window.location.reload()}
-                  >
-                    Refresh Page
-                  </Button>
-                </div>
               </div>
             </div>
           )}

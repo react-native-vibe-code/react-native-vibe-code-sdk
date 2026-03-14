@@ -552,6 +552,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
     isNgrokHealthy,
     isBackupActive,
     isStartingBackup,
+    isRecoveryActive,
+    isInRecoveryCooldown,
     checkNgrokHealth,
   } = useNgrokHealthCheck({
     sandboxId: currentProject?.sandboxId || null,
@@ -566,7 +568,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
     onExpoError: (errorMessage: string) => {
       reportError(errorMessage)
     },
-    // When backup server starts successfully, update the preview URL
+    // When backup server starts successfully, update the preview URL (US-004: in-place src update)
     onBackupServerReady: (newSandboxUrl, newNgrokUrl) => {
       console.log('[Project] Backup server ready, updating preview URL:', newSandboxUrl)
       setResult(prev => ({
@@ -574,8 +576,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
         url: newSandboxUrl,
         ngrokUrl: newNgrokUrl,
       }))
-      // Force preview to reload with new URL
-      setPreviewKey(prev => prev + 1)
+      // Update iframe src in-place instead of remounting via previewKey
+      reloadPreviewIframes()
     },
   })
 
@@ -614,7 +616,6 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
   const [activeTab, setActiveTab] = useCookieStorage<'chat' | 'panel'>('activeTab', 'chat')
   const [mobileActivePanel, setMobileActivePanel] = useState<'chat' | 'preview'>('chat')
   const [chatKey, setChatKey] = useState(0) // Key to force remount ChatPanel
-  const [previewKey, setPreviewKey] = useState(0) // Key to force reload preview when backup server starts
 
   // Cloud (Convex) state
   const [cloudEnabled, setCloudEnabled] = useState(false)
@@ -1227,34 +1228,39 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
     }
   }, [currentProject?.sandboxId, session?.user?.id, isRemixedProject])
 
-  // Check sandbox status when user returns to the tab
+  // Check sandbox status when user returns to the tab (US-005)
+  // Respects recovery authority — skips if useNgrokHealthCheck is already handling recovery
+  const visibilityDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     const handleVisibilityChange = async () => {
-      console.log('[Visibility] Visibility changed:', {
-        hidden: document.hidden,
-        projectId: currentProject?.id,
-        sandboxId: currentProject?.sandboxId,
-      })
-
       // When user comes back to the tab (document becomes visible)
-      if (!document.hidden && currentProject?.sandboxId && session?.user?.id) {
-        console.log('[Visibility] User returned to tab, checking sandbox and server status...')
+      if (document.hidden || !currentProject?.sandboxId || !session?.user?.id) return
 
-        // Skip if we're already in the process of starting the server (prevents race conditions)
+      // Debounce: prevent rapid fire on mobile app switching (US-005)
+      if (visibilityDebounceRef.current) {
+        clearTimeout(visibilityDebounceRef.current)
+      }
+
+      visibilityDebounceRef.current = setTimeout(async () => {
+        console.log('[Visibility] User returned to tab, checking sandbox status...')
+
+        // Skip if recovery is active or in cooldown — useNgrokHealthCheck handles it (US-005)
+        if (isRecoveryActive || isInRecoveryCooldown()) {
+          console.log('[Visibility] Recovery active or in cooldown, skipping visibility check')
+          return
+        }
+
+        // Skip if we're already in the process of starting the server
         if (isStartingServerRef.current) {
-          console.log('[Visibility] Server is already starting, skipping visibility check to avoid race condition')
+          console.log('[Visibility] Server is already starting, skipping')
           return
         }
 
         try {
-          // STEP 1: Check if sandbox container is alive first (silently, no loading UI)
-          console.log('[Visibility] Silently checking sandbox container status...')
-
+          // STEP 1: Check if sandbox container is alive (silently)
           const sandboxStatusResponse = await fetch('/api/sandbox-status', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               projectId: currentProject.id,
               userID: session.user.id,
@@ -1262,57 +1268,31 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
           })
 
           const statusResult = await sandboxStatusResponse.json()
-          console.log('[Visibility] Sandbox status check result:', statusResult)
+          console.log('[Visibility] Sandbox status:', statusResult)
 
-          // Store the sandbox start time for future checks
           if (statusResult.startedAt) {
             sandboxStartTimeRef.current = new Date(statusResult.startedAt)
-            console.log('[Visibility] Stored sandbox start time:', sandboxStartTimeRef.current)
           }
 
-          // Calculate if the sandbox has likely expired (E2B sandboxes last 1 hour)
-          // Use the fresh startedAt from status check, not just the ref
+          // Calculate lifetime
           const now = new Date()
           const ONE_HOUR_MS = 60 * 60 * 1000
           let isWithinLifetime = false
-
           if (statusResult.startedAt) {
-            const sandboxStartTime = new Date(statusResult.startedAt)
-            const timeSinceStart = now.getTime() - sandboxStartTime.getTime()
+            const timeSinceStart = now.getTime() - new Date(statusResult.startedAt).getTime()
             isWithinLifetime = timeSinceStart < ONE_HOUR_MS
-
-            if (isWithinLifetime) {
-              console.log('[Visibility] Sandbox is within 1-hour lifetime', {
-                timeSinceStart: Math.round(timeSinceStart / 1000 / 60), // minutes
-                remainingTime: Math.round((ONE_HOUR_MS - timeSinceStart) / 1000 / 60), // minutes
-              })
-            } else {
-              console.log('[Visibility] Sandbox has likely expired (>1 hour)', {
-                timeSinceStart: Math.round(timeSinceStart / 1000 / 60), // minutes
-              })
-            }
           }
 
           // If sandbox needs to be resumed (destroyed/stopped)
           if (statusResult.needsResume || !statusResult.isRunning) {
-            console.log('[Visibility] Sandbox is down and needs resume')
-            console.log('[Visibility] Status:', {
-              isRunning: statusResult.isRunning,
-              needsResume: statusResult.needsResume,
-              error: statusResult.error
-            })
-
-            // Show loading state while resuming (ONLY when actually resuming)
+            console.log('[Visibility] Sandbox is down, resuming...')
             isStartingServerRef.current = true
             setIsPreviewLoading(true)
             setIsSandboxRecovering(true)
-            toast.info('Restarting sandbox...')
             try {
               const response = await fetch('/api/resume-container', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   projectId: currentProject.id,
                   userID: session.user.id,
@@ -1321,16 +1301,9 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               })
 
               const result = await response.json()
-              console.log('[Visibility] Resume container result:', result)
 
               if (result.success) {
-                console.log('[Visibility] Container resumed successfully')
-
-                // Reset sandbox start time since we just created/resumed it
                 sandboxStartTimeRef.current = new Date()
-                console.log('[Visibility] Reset sandbox start time to now:', sandboxStartTimeRef.current)
-
-                // Update result state with fresh URLs
                 setResult({
                   url: result.url,
                   ngrokUrl: result.ngrokUrl,
@@ -1339,24 +1312,15 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                   projectTitle: currentProject.title,
                   template: currentProject.template as any,
                 })
-
-                // Refresh currentProject from DB to pick up new sandboxId
                 await refreshProjectData()
-
-                // Reload chat history after sandbox resume
                 setIsHistoryLoaded(false)
-
-                // Force iframe remount
-                setPreviewKey(prev => prev + 1)
-
-                toast.success('Sandbox ready!')
+                // Update iframes in-place instead of remounting (US-004)
+                reloadPreviewIframes()
               } else {
                 console.error('[Visibility] Failed to resume container:', result.error)
-                toast.error('Failed to restart sandbox')
               }
             } catch (error) {
               console.error('[Visibility] Error resuming container:', error)
-              toast.error('Failed to restart sandbox')
             } finally {
               setIsPreviewLoading(false)
               setIsSandboxRecovering(false)
@@ -1365,51 +1329,33 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
             return
           }
 
-          // STEP 2: Sandbox is running, now check if Expo server is responding
-          if (currentProject.ngrokUrl) {
-            console.log('[Visibility] Sandbox running, checking if Expo server is responding...')
-
+          // STEP 2: Sandbox is running — check Expo server only if not in recovery cooldown
+          if (currentProject.ngrokUrl && !isInRecoveryCooldown()) {
             try {
               const expoCheckResponse = await fetch('/api/check-expo-server', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   url: currentProject.ngrokUrl,
-                  sandboxId: currentProject.sandboxId  // Pass sandboxId for direct port check
+                  sandboxId: currentProject.sandboxId,
                 }),
               })
 
               const expoResult = await expoCheckResponse.json()
 
               if (expoResult.isAlive) {
-                console.log('[Visibility] ✅ Both sandbox and Expo server are running!')
-
-                // If within 1-hour lifetime and everything is healthy, skip any UI updates
-                if (isWithinLifetime) {
-                  console.log('[Visibility] Sandbox is healthy and within lifetime, no action needed')
-                  return
-                }
-
-                // Even if expired, if everything is working, no need to restart
-                console.log('[Visibility] Sandbox expired but still working, no restart needed')
+                console.log('[Visibility] Sandbox and Expo server healthy, no action needed')
                 return
               }
 
               console.log('[Visibility] Expo server not responding, restarting...')
-
-              // Only show loading UI when actually restarting (ONLY when Expo server is down)
               isStartingServerRef.current = true
               setIsPreviewLoading(true)
               setIsSandboxRecovering(true)
-              toast.info('Restarting sandbox...')
               try {
                 const response = await fetch('/api/start-server', {
                   method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
+                  headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     sandboxId: currentProject.sandboxId,
                     projectId: currentProject.id,
@@ -1420,9 +1366,6 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                 const serverResult = await response.json()
 
                 if (serverResult.success) {
-                  console.log('[Visibility] Expo server restarted successfully')
-
-                  // Add cache-busting timestamp to force iframe reload
                   const timestamp = Date.now()
                   const urlWithTimestamp = `${serverResult.url}${serverResult.url.includes('?') ? '&' : '?'}_t=${timestamp}`
 
@@ -1435,19 +1378,13 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                     projectTitle: currentProject.title,
                     template: currentProject.template as any,
                   })
-
-                  console.log('[Visibility] Result set with cache-busted URL:', urlWithTimestamp)
-
-                  // Force iframe remount
-                  setPreviewKey(prev => prev + 1)
-
-                  toast.success('Sandbox ready!')
+                  // Update iframes in-place instead of remounting (US-004)
+                  reloadPreviewIframes()
                 } else {
-                  toast.error('Failed to restart server')
+                  console.error('[Visibility] Failed to restart server')
                 }
               } catch (error) {
                 console.error('[Visibility] Error restarting Expo server:', error)
-                toast.error('Failed to restart server')
               } finally {
                 setIsPreviewLoading(false)
                 setIsSandboxRecovering(false)
@@ -1460,15 +1397,18 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
         } catch (error) {
           console.error('[Visibility] Error checking sandbox status:', error)
         }
-      }
+      }, 2000) // 2-second debounce for mobile app switching
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (visibilityDebounceRef.current) {
+        clearTimeout(visibilityDebounceRef.current)
+      }
     }
-  }, [currentProject, session?.user?.id, userTeam?.id])
+  }, [currentProject, session?.user?.id, userTeam?.id, isRecoveryActive, isInRecoveryCooldown])
 
   // Screenshot triggering has been moved to PreviewPanel component
   // It now triggers on iframe onLoad event with a 10-second delay
@@ -2522,7 +2462,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                   isCloudPanelOpen={mobileSidebarPanel === 'cloud'}
                   onCloudPanelOpen={() => setMobileSidebarPanel('cloud')}
                   onCloudPanelClose={() => setMobileSidebarPanel(null)}
-                  onIframeRefresh={() => setPreviewKey(prev => prev + 1)}
+                  onIframeRefresh={() => reloadPreviewIframes()}
                 />
                 {latestError && (
                   <ErrorNotificationCard
@@ -2538,7 +2478,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               </div>
             ) : (
               <PreviewPanel
-                key={`preview-${previewKey}`}
+                key="preview-mobile"
                 code={code}
                 previewUrl={(result as any)?.url}
                 isGenerating={isPreviewLoading}
@@ -2562,6 +2502,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                 onContentModeChange={setContentMode}
                 openPublishOptions={openPublishOptions}
                 onOpenPublishOptionsChange={setOpenPublishOptions}
+                isRecoveryActive={isRecoveryActive}
+                isInRecoveryCooldown={isInRecoveryCooldown}
               />
             )}
         </div>
@@ -2643,7 +2585,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                   isCloudPanelOpen={desktopSidebarPanel === 'cloud'}
                   onCloudPanelOpen={() => setDesktopSidebarPanel('cloud')}
                   onCloudPanelClose={() => setDesktopSidebarPanel(null)}
-                  onIframeRefresh={() => setPreviewKey(prev => prev + 1)}
+                  onIframeRefresh={() => reloadPreviewIframes()}
                 />
                 {latestError && (
                   <ErrorNotificationCard
@@ -2672,7 +2614,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
           {/* Preview Panel - takes full remaining width */}
           <div className="flex-1 h-full">
             <PreviewPanel
-              key={`preview-desktop-${previewKey}`}
+              key="preview-desktop"
               code={code}
               previewUrl={(result as any)?.url}
               isGenerating={isPreviewLoading}
@@ -2695,6 +2637,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               onContentModeChange={setContentMode}
               openPublishOptions={openPublishOptions}
               onOpenPublishOptionsChange={setOpenPublishOptions}
+              isRecoveryActive={isRecoveryActive}
+              isInRecoveryCooldown={isInRecoveryCooldown}
             />
           </div>
             </div>

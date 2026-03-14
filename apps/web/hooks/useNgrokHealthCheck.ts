@@ -31,12 +31,17 @@ interface UseNgrokHealthCheckReturn {
   isNgrokHealthy: boolean
   isBackupActive: boolean
   isStartingBackup: boolean
+  isRecoveryActive: boolean
+  isInRecoveryCooldown: () => boolean
   checkNgrokHealth: () => Promise<boolean>
   triggerBackupServer: () => Promise<void>
 }
 
 const PRIMARY_PORT = 8081
 const DEFAULT_POLLING_INTERVAL = 60000 // 60 seconds
+const RECOVERY_COOLDOWN_MS = 90000 // 90 seconds
+
+const RECOVERY_TOAST_ID = 'tunnel-recovery'
 
 export function useNgrokHealthCheck({
   sandboxId,
@@ -64,7 +69,22 @@ export function useNgrokHealthCheck({
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const consecutiveFailuresRef = useRef(0)
 
+  // Recovery coordination refs (US-001)
+  const recoveryLockRef = useRef(false)
+  const lastRecoveryTimestampRef = useRef(0)
+
+  // Stale closure fix refs (US-007) — always read latest URL values
+  const ngrokUrlRef = useRef(ngrokUrl)
+  const sandboxIdRef = useRef(sandboxId)
+  ngrokUrlRef.current = ngrokUrl
+  sandboxIdRef.current = sandboxId
+
   const isDev = process.env.NODE_ENV === 'development'
+
+  const isInRecoveryCooldown = useCallback((): boolean => {
+    if (lastRecoveryTimestampRef.current === 0) return false
+    return Date.now() - lastRecoveryTimestampRef.current < RECOVERY_COOLDOWN_MS
+  }, [])
 
   const showDevToast = useCallback((message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     if (!isDev) return
@@ -85,8 +105,18 @@ export function useNgrokHealthCheck({
   }, [isDev])
 
   const checkNgrokHealth = useCallback(async (): Promise<boolean> => {
-    if (!sandboxId || !ngrokUrl || isCheckingRef.current) {
+    // Use refs to avoid stale closures (US-007)
+    const currentNgrokUrl = ngrokUrlRef.current
+    const currentSandboxId = sandboxIdRef.current
+
+    if (!currentSandboxId || !currentNgrokUrl || isCheckingRef.current) {
       return true // Assume healthy if we can't check
+    }
+
+    // Skip during recovery or cooldown (US-001)
+    if (recoveryLockRef.current || isInRecoveryCooldown()) {
+      console.log('[useNgrokHealthCheck] Skipping health check — recovery active or in cooldown')
+      return true
     }
 
     isCheckingRef.current = true
@@ -100,8 +130,8 @@ export function useNgrokHealthCheck({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ngrokUrl,
-          sandboxId,
+          ngrokUrl: currentNgrokUrl,
+          sandboxId: currentSandboxId,
           checkPort,
         }),
       })
@@ -138,16 +168,26 @@ export function useNgrokHealthCheck({
     } finally {
       isCheckingRef.current = false
     }
-  }, [sandboxId, ngrokUrl, tunnelMode, onExpoError])
+  }, [tunnelMode, onExpoError, isInRecoveryCooldown])
 
   const triggerBackupServer = useCallback(async () => {
-    if (!sandboxId || !projectId || !userId) {
+    const currentSandboxId = sandboxIdRef.current
+    if (!currentSandboxId || !projectId || !userId) {
       console.error('[useNgrokHealthCheck] Cannot start backup: missing required params')
       return
     }
 
+    // Acquire recovery lock (US-001)
+    if (recoveryLockRef.current) {
+      console.log('[useNgrokHealthCheck] Recovery already in progress, skipping')
+      return
+    }
+    recoveryLockRef.current = true
+
     setHealthState(prev => ({ ...prev, isStartingRecovery: true }))
-    showDevToast('Ngrok tunnel disconnected, restarting server...', 'warning')
+
+    // Single toast at start of recovery (US-006)
+    toast.info('Reconnecting tunnel...', { id: RECOVERY_TOAST_ID })
 
     try {
       console.log('[useNgrokHealthCheck] Restarting server...')
@@ -158,7 +198,7 @@ export function useNgrokHealthCheck({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sandboxId,
+          sandboxId: currentSandboxId,
           projectId,
           userId,
           action,
@@ -180,10 +220,17 @@ export function useNgrokHealthCheck({
           },
         }))
         consecutiveFailuresRef.current = 0
-        showDevToast('Server restarted successfully', 'success')
 
-        // Also show in production for important events
-        toast.success('Ngrok tunnel reconnected successfully')
+        // Update refs immediately with new URLs (US-007)
+        if (data.ngrokUrl) {
+          ngrokUrlRef.current = data.ngrokUrl
+        }
+
+        // Set recovery timestamp for cooldown (US-001)
+        lastRecoveryTimestampRef.current = Date.now()
+
+        // Single success toast (US-006)
+        toast.success('Preview reconnected', { id: RECOVERY_TOAST_ID })
 
         // Call callback with new URLs so parent component can update preview
         if (onBackupServerReady && data.sandboxUrl && data.ngrokUrl) {
@@ -192,20 +239,20 @@ export function useNgrokHealthCheck({
         }
       } else {
         setHealthState(prev => ({ ...prev, isStartingRecovery: false }))
-        showDevToast(`Failed to restart server: ${data.error}`, 'error')
 
-        // Show error to user in production too
-        toast.error(`Ngrok tunnel recovery failed: ${data.error || 'Unknown error'}. Please refresh the page.`)
+        // Single error toast (US-006)
+        toast.error('Recovery failed. Please refresh the page.', { id: RECOVERY_TOAST_ID })
       }
     } catch (error) {
       console.error('[useNgrokHealthCheck] Failed to restart server:', error)
       setHealthState(prev => ({ ...prev, isStartingRecovery: false }))
-      showDevToast('Failed to restart server', 'error')
 
-      // Show error to user in production too
-      toast.error('Failed to recover ngrok tunnel. Please refresh the page.')
+      toast.error('Recovery failed. Please refresh the page.', { id: RECOVERY_TOAST_ID })
+    } finally {
+      // Release recovery lock (US-001)
+      recoveryLockRef.current = false
     }
-  }, [sandboxId, projectId, userId, healthState.isRecoveryActive, showDevToast, onBackupServerReady, tunnelMode])
+  }, [projectId, userId, healthState.isRecoveryActive, onBackupServerReady, tunnelMode])
 
   // Main polling effect - only starts after serverReady is true
   useEffect(() => {
@@ -262,6 +309,8 @@ export function useNgrokHealthCheck({
     isNgrokHealthy,
     isBackupActive: healthState.isRecoveryActive,
     isStartingBackup: healthState.isStartingRecovery,
+    isRecoveryActive: recoveryLockRef.current || healthState.isStartingRecovery,
+    isInRecoveryCooldown,
     checkNgrokHealth,
     triggerBackupServer,
   }
