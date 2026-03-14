@@ -28,6 +28,7 @@ import { CodePanel } from '@/components/code-panel'
 import { ProjectHeaderActions } from '@/components/project-header-actions'
 import { AppStoreSubmissionsModal } from '@/components/app-store-submissions-modal'
 import { PublishAppStoreModal } from '@/components/publish-app-store-modal'
+import { PublishOptionsModal } from '@/components/publish-options-modal'
 import { Session } from '@/lib/auth'
 
 type ViewMode = 'mobile' | 'desktop' | 'both' | 'mobile-qr'
@@ -57,9 +58,9 @@ interface PreviewPanelProps {
   // Props for ProjectHeaderActions
   projectTitle?: string
   session?: Session | null
-  // External trigger to open App Store Submissions modal (used by mobile menu)
-  openAppStoreSubmissions?: boolean
-  onOpenAppStoreSubmissionsChange?: (open: boolean) => void
+  // External trigger to open Publish Options modal (used by mobile menu)
+  openPublishOptions?: boolean
+  onOpenPublishOptionsChange?: (open: boolean) => void
 }
 
 export function PreviewPanel({
@@ -85,8 +86,8 @@ export function PreviewPanel({
   // Props for ProjectHeaderActions
   projectTitle,
   session,
-  openAppStoreSubmissions: externalOpenAppStoreSubmissions,
-  onOpenAppStoreSubmissionsChange,
+  openPublishOptions: externalOpenPublishOptions,
+  onOpenPublishOptionsChange,
 }: PreviewPanelProps) {
   const isMobile = useIsMobile()
   const { isDevMode } = useDevMode()
@@ -108,6 +109,7 @@ export function PreviewPanel({
   const [iframeKey, setIframeKey] = useState(0) // Key to force iframe remount
   const [showAppStoreSubmissions, setShowAppStoreSubmissions] = useState(false)
   const [showPublishWizard, setShowPublishWizard] = useState(false)
+  const [showPublishOptions, setShowPublishOptions] = useState(false)
   const [connectionRetryCount, setConnectionRetryCount] = useState(0)
   const maxConnectionRetries = 3
   // Set initial tab based on mobile view prop - on mobile devices, default to web if mobileView is 'web'
@@ -129,13 +131,13 @@ export function PreviewPanel({
   const contentMode = externalContentMode ?? internalContentMode
   const setContentMode = onContentModeChange ?? setInternalContentMode
 
-  // Sync external App Store Submissions trigger with internal state
+  // Sync external Publish Options trigger with internal state
   useEffect(() => {
-    if (externalOpenAppStoreSubmissions) {
-      setShowAppStoreSubmissions(true)
-      onOpenAppStoreSubmissionsChange?.(false)
+    if (externalOpenPublishOptions) {
+      setShowPublishOptions(true)
+      onOpenPublishOptionsChange?.(false)
     }
-  }, [externalOpenAppStoreSubmissions, onOpenAppStoreSubmissionsChange])
+  }, [externalOpenPublishOptions, onOpenPublishOptionsChange])
 
   // Update selectedTab when mobileView prop changes on mobile devices
   useEffect(() => {
@@ -1218,6 +1220,19 @@ Run 'npm install react-native-gesture-handler' or 'yarn add react-native-gesture
       <ExpoGoModal
         open={showExpoGoModal}
         onOpenChange={setShowExpoGoModal}
+      />
+
+      {/* Publish Options Modal (mobile) */}
+      <PublishOptionsModal
+        open={showPublishOptions}
+        onOpenChange={setShowPublishOptions}
+        projectId={projectId}
+        projectTitle={projectTitle}
+        sandboxId={sandboxId}
+        session={session}
+        currentProject={currentProject}
+        onProjectUpdate={onProjectUpdate}
+        onOpenAppStoreSubmissions={() => setShowAppStoreSubmissions(true)}
       />
 
       {/* App Store Submissions Modal */}

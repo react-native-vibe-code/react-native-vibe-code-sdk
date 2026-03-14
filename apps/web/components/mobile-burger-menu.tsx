@@ -41,7 +41,7 @@ interface MobileBurgerMenuProps {
   onOpenSubscriptionModal: () => void
   onOpenUserSettingsModal: () => void
   onOpenProjectSettingsModal: () => void
-  onOpenAppStoreSubmissions: () => void
+  onOpenPublishOptions: () => void
   onSignOut?: () => void
   onClose: () => void
 }
@@ -57,7 +57,7 @@ export function MobileBurgerMenu({
   onOpenSubscriptionModal,
   onOpenUserSettingsModal,
   onOpenProjectSettingsModal,
-  onOpenAppStoreSubmissions,
+  onOpenPublishOptions,
   onSignOut,
   onClose,
 }: MobileBurgerMenuProps) {
@@ -213,7 +213,7 @@ export function MobileBurgerMenu({
 
         <button
           onClick={() => {
-            onOpenAppStoreSubmissions()
+            onOpenPublishOptions()
             onClose()
           }}
           disabled={!projectId || !sandboxId || !session?.user?.id}

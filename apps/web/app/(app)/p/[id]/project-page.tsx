@@ -167,7 +167,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false)
   const [isUserSettingsModalOpen, setIsUserSettingsModalOpen] = useState(false)
   const [isProjectSettingsModalOpen, setIsProjectSettingsModalOpen] = useState(false)
-  const [openAppStoreSubmissions, setOpenAppStoreSubmissions] = useState(false)
+  const [openPublishOptions, setOpenPublishOptions] = useState(false)
   const [isByokEnabled, setIsByokEnabled] = useState(false)
 
   useEffect(() => {
@@ -2393,7 +2393,7 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
             onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
             onOpenUserSettingsModal={() => setIsUserSettingsModalOpen(true)}
             onOpenProjectSettingsModal={() => setIsProjectSettingsModalOpen(true)}
-            onOpenAppStoreSubmissions={() => setOpenAppStoreSubmissions(true)}
+            onOpenPublishOptions={() => setOpenPublishOptions(true)}
             onSignOut={async () => {
               await signOut()
             }}
@@ -2560,8 +2560,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
                 onFileSelect={setCurrentFile}
                 contentMode={contentMode}
                 onContentModeChange={setContentMode}
-                openAppStoreSubmissions={openAppStoreSubmissions}
-                onOpenAppStoreSubmissionsChange={setOpenAppStoreSubmissions}
+                openPublishOptions={openPublishOptions}
+                onOpenPublishOptionsChange={setOpenPublishOptions}
               />
             )}
         </div>
@@ -2693,8 +2693,8 @@ export function ProjectPageInternal({ opencodeEnabled = false, template: templat
               onFileSelect={setCurrentFile}
               contentMode={contentMode}
               onContentModeChange={setContentMode}
-              openAppStoreSubmissions={openAppStoreSubmissions}
-              onOpenAppStoreSubmissionsChange={setOpenAppStoreSubmissions}
+              openPublishOptions={openPublishOptions}
+              onOpenPublishOptionsChange={setOpenPublishOptions}
             />
           </div>
             </div>
