@@ -209,7 +209,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ proj
         // If we have an effective custom domain, use it; otherwise fall back to Cloudflare's result
         let finalDeployedUrl: string
         if (effectiveCustomDomain) {
-          finalDeployedUrl = `https://${effectiveCustomDomain}.capsulethis.app`
+          finalDeployedUrl = `https://${effectiveCustomDomain}.pages.dev`
         } else if (deployResult.customDomainUrl) {
           finalDeployedUrl = deployResult.customDomainUrl
         } else {
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ proj
     // Build the final deployment URL for response
     let responseDeploymentUrl: string
     if (responseCustomDomainUrl) {
-      responseDeploymentUrl = `https://${responseCustomDomainUrl}.capsulethis.app`
+      responseDeploymentUrl = `https://${responseCustomDomainUrl}.pages.dev`
     } else {
       responseDeploymentUrl = deployResult.deploymentUrl || deployResult.pagesDevUrl || ''
     }

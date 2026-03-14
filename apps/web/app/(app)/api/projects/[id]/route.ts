@@ -186,7 +186,7 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
       // Also update deployedUrl if the project has been deployed
       // This ensures "Visit Webapp" shows the correct URL
       if (existingProject[0].cloudflareProjectName || existingProject[0].deployedUrl) {
-        updateData.deployedUrl = `https://${sanitizedDomain}.capsulethis.app`
+        updateData.deployedUrl = `https://${sanitizedDomain}.pages.dev`
       }
     }
 
