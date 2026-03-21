@@ -47,6 +47,8 @@ export type SessionHook = (
 export interface ExecutorHooks {
   /** Hooks to run when the session ends */
   onSessionEnd?: SessionHook[]
+  /** Hooks to run after a tool is used (e.g., after Write/Edit) */
+  onPostToolUse?: SessionHook[]
 }
 
 /**

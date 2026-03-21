@@ -189,6 +189,9 @@ export class ClaudeCodeService {
             .limit(1)
           cloudEnabled = (project?.convexProject as any)?.kind === 'connected'
           console.log('[Claude Code Service] ☁️ Cloud enabled:', cloudEnabled)
+          if (cloudEnabled) {
+            console.log('[Claude Code Service] ☁️ Convex deploy hook will be enabled')
+          }
         } catch (dbError) {
           console.error('[Claude Code Service] ❌ Failed to check cloud status:', dbError)
         }
@@ -251,7 +254,9 @@ export class ClaudeCodeService {
         // 3. The executor explicitly reads /claude-sdk/.env and sets process.env from it
         await sandbox.files.write('/claude-sdk/.env', `ANTHROPIC_API_KEY=${apiKeyToUse}\n`)
 
-        const command = `cd /claude-sdk && bun start -- --prompt="${escapedMessage}"${systemPromptArg}${sessionArg}${modelArg}${imageUrlsArg}`
+        const convexDeployArg = cloudEnabled ? ' --with-convex-deploy' : ''
+
+        const command = `cd /claude-sdk && bun start -- --prompt="${escapedMessage}"${systemPromptArg}${sessionArg}${modelArg}${imageUrlsArg}${convexDeployArg}`
 
         console.log('[Claude Code Service] Executing command with session support:', {
           hasSessionId: !!request.sessionId,

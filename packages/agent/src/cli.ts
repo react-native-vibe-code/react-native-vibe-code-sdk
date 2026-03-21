@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { runExecutor } from './executor.js'
 import { parseArgs } from './utils/parse-args.js'
-import { createConvexDeployHook } from './hooks/convex-deploy.js'
+import { createConvexDeployHook, createConvexPostToolUseHook } from './hooks/convex-deploy.js'
 
 /**
  * CLI entry point for the Capsule Agent
@@ -31,7 +31,10 @@ async function main() {
     const withConvexDeploy = process.argv.some(arg => arg === '--with-convex-deploy')
 
     const hooks = withConvexDeploy
-      ? { onSessionEnd: [createConvexDeployHook()] }
+      ? {
+          onSessionEnd: [createConvexDeployHook()],
+          onPostToolUse: [createConvexPostToolUseHook()],
+        }
       : undefined
 
     const result = await runExecutor(args, undefined, hooks)

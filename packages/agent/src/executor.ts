@@ -113,10 +113,14 @@ export async function runExecutor(
     }
 
     // Build hooks configuration
-    const hooksConfig: Record<string, Array<{ hooks: Array<(input: { hook_event_name: string; cwd: string }, toolUseID: string | undefined, options: { signal: AbortSignal }) => Promise<{ continue: boolean }>> }>> = {}
+    const hooksConfig: Record<string, Array<{ matcher?: string; hooks: Array<(input: { hook_event_name: string; cwd: string }, toolUseID: string | undefined, options: { signal: AbortSignal }) => Promise<{ continue: boolean }>> }>> = {}
 
     if (hooks?.onSessionEnd && hooks.onSessionEnd.length > 0) {
       hooksConfig['SessionEnd'] = [{ hooks: hooks.onSessionEnd }]
+    }
+
+    if (hooks?.onPostToolUse && hooks.onPostToolUse.length > 0) {
+      hooksConfig['PostToolUse'] = [{ matcher: 'Write|Edit', hooks: hooks.onPostToolUse }]
     }
 
     // Build system prompt option
