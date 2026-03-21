@@ -168,9 +168,9 @@ export const auth = betterAuth({
     'exp://localhost:8081', // Expo development server
     ...(process.env.EXPO_DEV_URL ? [process.env.EXPO_DEV_URL] : []), // Expo Go on local network (set EXPO_DEV_URL)
     // Wildcard patterns for sandbox and deployment environments
-    /^https:\/\/.*\.e2b\.dev$/, // E2B sandbox environments
-    /^https:\/\/.*\.pages\.dev$/, // Cloudflare Pages deployments
-    /^https:\/\/.*\.capsulethis\.app$/, // Capsule app instances
-    /^https:\/\/.*\.reactnativevibecode\.com$/, // React Native Vibe Code subdomains
-  ].filter(Boolean) as (string | RegExp)[],
+    'https://*.e2b.dev', // E2B sandbox environments
+    'https://*.pages.dev', // Cloudflare Pages deployments
+    'https://*.capsulethis.app', // Capsule app instances
+    'https://*.reactnativevibecode.com', // React Native Vibe Code subdomains
+  ].filter(Boolean) as string[],
 })
